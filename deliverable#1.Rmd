@@ -1,0 +1,45 @@
+---
+title: "deliverable#1"
+output: html_document
+---
+## loading data
+```{r}
+library(tidyverse)
+library(stringr)
+(grad <- read_csv("all_uisc_clean_colName.csv", col_types = cols()))
+view(grad)
+```
+
+
+## Variation of Single Variable
+```{r}
+# bar chart for season
+grad %>% 
+  filter(!is.na(season)) %>%
+  ggplot() +
+  geom_bar(aes(x = season)) +
+  labs(title = "admission season")
+
+# bar chart for decision
+grad %>%
+  filter(!is.na(decision)) %>%
+  ggplot() +
+  geom_bar(aes(x = decision)) +
+  labs(title = "admission decision")
+
+# bar chart for decision date
+# remove"()" from decision date
+a <- grad$decision_date %>%
+  str_replace("\\(", "") %>%
+  str_replace("\\)", "")
+# update decision date
+grad$decision_date <- a  
+
+grad %>%
+  filter(!is.na(decision_date)) %>%
+  mutate(yr = str_match(decision_date, "...\\d$")) %>%
+  ggplot() + 
+  geom_bar(aes(yr)) +
+  labs(title = "total application by year")
+
+```
