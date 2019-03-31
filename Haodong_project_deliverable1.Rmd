@@ -1,0 +1,70 @@
+---
+title: "Haodong Liu Notebook"
+output: github_notebook
+---
+
+
+```{r}
+library(plotly)
+library(tidyverse)
+
+grad <- all_uisc_clean_colName
+
+# GRE Verbal
+grad %>% select(gre_verbal ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_verbal) != TRUE ) %>% ggplot + geom_histogram(aes(gre_verbal))
+
+
+# GRE quant
+grad %>% select(gre_quant ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_quant) != TRUE ) %>% ggplot + geom_histogram(aes(gre_quant))
+
+
+# GRE writing
+grad %>% select(gre_writing ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_writing) != TRUE) %>% ggplot + geom_histogram(aes(gre_writing))
+
+# 3D PLOT
+
+grad_mutate =  grad %>% filter(is_new_gre == TRUE & is.na(gre_verbal) != TRUE ) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_quant) != TRUE ) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_writing) != TRUE)
+
+(p <- plot_ly(grad, x = ~gre_verbal, y = ~gre_quant, z = ~gre_writing) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = 'gre_verbal'),
+                      yaxis = list(title = 'gre_quant'),
+                      zaxis = list(title = 'gre_writing'))))
+
+
+
+# Decision reported over time (2015, 2016, 2017)?
+# add other single variable to it
+date_no_parentheses <- grad$decision_date %>% str_replace("\\(", "") %>% str_replace("\\)", "")
+
+grad$decision_date <- date_no_parentheses 
+
+# Create a dataset for plotting number of application verses year
+(grad_year = grad %>% select(degree, decision_date)  %>% 
+  filter(is.na(decision_date) != TRUE ) %>%
+  mutate(yr = str_match(decision_date, "...\\d$")) %>%
+  filter(degree == "MFA" | degree == "MS" | degree == "PhD") %>%
+  filter(as.integer(yr) < 2016 ) %>% filter(as.integer(yr) > 2005) %>%
+  group_by(yr,degree)  %>% ungroup()) 
+  
+
+# plot
+grad_year %>% ggplot(aes(x = as.integer(yr), color = degree)) + 
+  geom_histogram( binwidth = 1, position = "dodge" )
+  
+  
+
+```
+Summary: Only new GRE scores are included in the figure. 
+GRE verbal score range from 130 to 170 with a bell shape. Most of them concentrate 155 - 165.
+GRE verbal score range from 130 to 170 with step like shape. Scores tend to concentrate 160 - 170.
+GRE verbal score range from 2 to 6 with a bell like shape. Most people get score of 4.
+
+The dataset has official data of report from 2006 to 2015. The application report of three degrees, MFA, MS, PhD increase each year until 2015.
+
+
