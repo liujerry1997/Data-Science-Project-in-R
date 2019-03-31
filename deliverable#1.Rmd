@@ -1,6 +1,6 @@
 ---
 title: "deliverable#1"
-output: html_document
+output: git_document
 ---
 ## loading data
 ```{r}
@@ -14,32 +14,71 @@ view(grad)
 ## Variation of Single Variable
 ```{r}
 # bar chart for season
+# bar chart includes both Spring semester and Fall semester
 grad %>% 
   filter(!is.na(season)) %>%
   ggplot() +
   geom_bar(aes(x = season)) +
-  labs(title = "admission season")
+  labs(title = "Admission Season")
+
+# bar chart for Fall semester only
+grad %>%
+  filter(!is.na(season)) %>%
+  group_by(fall = str_match(season, "^\\F..")) %>%
+  filter(!is.na(fall)) %>%
+  ggplot() +
+  geom_bar(aes(x = season)) +
+  labs(title = "Admission Season (Fall)")
+
+# bar chart for Spring semester only
+grad %>%
+  filter(!is.na(season)) %>%
+  group_by(fall = str_match(season, "^\\F..")) %>%
+  filter(is.na(fall)) %>%
+  ggplot() +
+  geom_bar(aes(x = season)) +
+  labs(title = "Admission Season (Spring)")
+
 
 # bar chart for decision
 grad %>%
   filter(!is.na(decision)) %>%
   ggplot() +
   geom_bar(aes(x = decision)) +
-  labs(title = "admission decision")
-
+  labs(title = "Admission Decision")
+  
 # bar chart for decision date
-# remove"()" from decision date
-a <- grad$decision_date %>%
+data_without_parentheses <- grad$decision_date %>%
   str_replace("\\(", "") %>%
   str_replace("\\)", "")
-# update decision date
-grad$decision_date <- a  
-
+grad$decision_date <- data_without_parentheses  
 grad %>%
   filter(!is.na(decision_date)) %>%
   mutate(yr = str_match(decision_date, "...\\d$")) %>%
   ggplot() + 
   geom_bar(aes(yr)) +
-  labs(title = "total application by year")
+  labs(title = "Total Application by Year")
 
 ```
+
+## CovariationBbetween Variables
+```{r}
+# student identity vs acceptance rate
+# table for student status vs decision
+grad %>%
+  filter(!is.na(status), !is.na(decision)) %>%
+  group_by(status, decision) %>%
+  summarise(count = n()) %>%
+  spread(key = decision, value = count)
+
+# bar chart 
+grad %>%
+  filter(!is.na(decision), !is.na(status)) %>%
+  ggplot() +
+  geom_bar(aes(status, fill = decision), position = "dodge") +
+  labs(title = "Admission Decision vs Status")
+
+```
+
+
+
