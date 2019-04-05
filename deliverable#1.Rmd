@@ -80,9 +80,9 @@ grad %>%
 
 # acceptance rate based on student status
 grid$sum = rowSums(grid[, c("Accepted", "Interview", "Other", "Rejected", "Wait listed")])
-grid
 grid %>%
-  gather('Accepted', 'Interview', 'Other', 'Rejected', 'Wait listed', key = "decision", value = "cases") %>%
+  gather('Accepted', 'Interview', 'Other', 'Rejected', 'Wait listed', 
+         key = "decision", value = "cases") %>%
   mutate(prop = cases/sum) %>%
   filter(status != "Other") %>%
   ggplot(aes(group = decision, status, prop, color = decision)) + 
