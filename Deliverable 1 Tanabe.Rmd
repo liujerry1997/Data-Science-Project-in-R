@@ -7,45 +7,45 @@ output: html_document
 In this project, we explore graduate admissions data from Grad Cafe. We are interested in understanding how the different variables affect admissions decisions, and how admissions differ across different schools and degree programs. We do not find too much many surprising results in this exploratory data analysis, with the exception of the most selective Universities and Majors. While this dataset is likely the most robust dataset we can find regarding graduate admissions, the data is self-reported and will likely contain some bias. It is hard to predict which covariates are the best predictors of admission decisions, but we hypothesize that this would depend on the program and the performance of the student measured by test scores and GPA.
 
 ##Dataset Description
-For this project, we will use data on graduate admissions from Grad Cafe provided by Debarghya Das on GitHub. The data is self-reported by prospective graduate students on https://www.thegradcafe.com/. The dataset contains 345,303 observations and 19 variables with a mix of continuous and categorical data. The dataset contains the following variables: 
+For this project, we will use data on graduate admissions from Grad Cafe provided by Debarghya Das on GitHub. The graduate school admission result database includes admission results and detailed student test scores self-reported by prospective graduate students on https://www.thegradcafe.com/. The dataset contains 345,303 observations and 19 variables with a mix of continuous and categorical data. The dataset contains the following variables: 
 
-1. **rowid (integer)** - An integer id of the row
+1. **rowid (integer)** - An integer id of the row.
 
-2. **uni_name (character)** - The name of the university
+2. **uni_name (character)** - The name of the university.
 
-3. **major(character)** - The name of the intended major
+3. **major(character)** - The subject of the program self-reported by students.
 
-4. **degree (character)** - The type of degree program
+4. **degree (character)** - The type of degree program. The variable takes one of the following values: MS, MA, PhD, MFA, MBA, MEng, and Other.
 
-5. **season (character)** - The season of application
+5. **season (character)** - The season of application. The first letter indicates whether the program starts from the Fall semester or Spring semester, and then the letter is followed by the last 2 digits of the year the program starts. 
 
-6. **decision (character)** - The admission decision
+6. **decision (character)** - The admission decision. It contains five categories - Accepted, Rejected, Wait-listed, Interview and Other.  
 
-7. **decision_method (character) ** - The method through which decision was communicated
+7. **decision_method (character) ** - The method through which decision was communicated.
 
-8. **decision_date (character)** - The date that the decision was communicated
+8. **decision_date (character)** - The date that the decision was communicated.
 
-9. **decision_timestamp (integer)** - timestamp of the decision
+9. **decision_timestamp (integer)** - Timestamp of the decision.
 
-10. **ugrad_gpa (double)** - undergraduate GPA
+10. **ugrad_gpa (double)** - The respondent’s undergraduate GPA. The scale of the GPA varies because some students use a 10-point scale while others use a 4-point scale.
 
-11. **gre_verbal (double)** - GRE verbal score
+11. **gre_verbal (double)** - GRE verbal score, which varies from 130 to 170 for the new GRE and from 200 to 800 for the old GRE.
 
-12. **gre_quant (double)** - GRE quantitative score
+12. **gre_quant (double)** - GRE quantitative score, which varies from 130 to 170 for the new GRE and from 200 to 800 for the old GRE.
 
-13. **gre_writing (double)** - GRE writing score
+13. **gre_writing (double)** - GRE writing score that ranges from 0 to 6.
 
-14. **is_new_gre (logical)** - whether or not the applicant took the new GRE
+14. **is_new_gre (logical)** - Whether or not the applicant took the new GRE.
 
-15. **gre_subject (double)** -  GRE subject test score
+15. **gre_subject (double)** -  GRE subject test score on a 200 to 990 score scale. 
 
-16. **status (character)** - Status of the candidate. Can be "International", "International with US Degree", "American" or "Other"
+16. **status (character)** - Status of the candidate. Can be "International", "International with US Degree", "American" or "Other".
 
-17. **post_data (character)** - The date in which the observation was posted on grad cafe
+17. **post_data (character)** - The date in which the observation was posted on grad cafe.
 
-18. **post_timestamp (integer)** - timestamp of the post
+18. **post_timestamp (integer)** - Timestamp of the post.
 
-19. **comments (character)** - Applicants’ comments
+19. **comments (character)** - Applicants’ comments.
 
 
 We decided to drop variables which either contain little information such as 'gre_subject', which few candidates reported, and 'rowid' which is redundant, and variables which are not of interest to us, such as 'comments', 'decision_method', 'post_data', and 'post_timestamp'. 
@@ -178,7 +178,7 @@ grad %>%
   labs(title = "Admission Decision")
 ```
 
-We see that the total number of application are signicantly higher for the fall semester than the Spring semester. When looking at the distribution of decisions, the majority of candidates either recieve of report mainly acceptances and rejections, while a few candiates recieve other forms of responses such as waitlist, interview, or "other."
+We see that the total number of application are signicantly higher for the fall semester than the Spring semester. Focusing only on fall semesters, graduate school enrollment clearly has shown a positive trend over the years. Spring enrollment does not show an explicit pattern. When looking at the distribution of decisions, the majority of candidates either recieve of report mainly acceptances and rejections, while a few candiates recieve other forms of responses such as waitlist, interview, or "other."
 
 Next, we plot the distribution of GRE test scores, and GPA. Because these is a variable "is_new_gre", which distinguished between old and new GRE, we filter for only new GRE scores, as the majority of observations report new GRE scores.
 ```{r}
