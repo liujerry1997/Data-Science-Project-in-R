@@ -65,11 +65,11 @@ grad %>%
 ```{r}
 # student identity vs acceptance rate
 # table for student status vs decision
-grad %>%
+(grid <- grad %>%
   filter(!is.na(status), !is.na(decision)) %>%
   group_by(status, decision) %>%
   summarise(count = n()) %>%
-  spread(key = decision, value = count)
+  spread(key = decision, value = count))
 
 # bar chart 
 grad %>%
@@ -78,7 +78,25 @@ grad %>%
   geom_bar(aes(status, fill = decision), position = "dodge") +
   labs(title = "Admission Decision vs Status")
 
+# acceptance rate based on student status
+grid$sum = rowSums(grid[, c("Accepted", "Interview", "Other", "Rejected", "Wait listed")])
+grid
+grid %>%
+  gather('Accepted', 'Interview', 'Other', 'Rejected', 'Wait listed', key = "decision", value = "cases") %>%
+  mutate(prop = cases/sum) %>%
+  filter(status != "Other") %>%
+  ggplot(aes(group = decision, status, prop, color = decision)) + 
+  geom_line()
+
+# summary: The bar chart shows that, for American students, the number of getting accepted is higher than the number of getting rejected. However, for international students and international students with US degree, the number of acceptance is lower than the number of rejection. To further investigate if international students are treated differently, we calculate the decision rate. For each status category, we divide the total number of each admission decision by total number of students to get the decision rate. From the plot we can tell that the proportion of getting accepted is higher for American students than international students, and the proportion of getting rejected is higher for international students with US degree.
 ```
 
+```{r}
+
+
+grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
+  ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "GPA Distribution")
+
+```
 
 
