@@ -1,10 +1,11 @@
 ---
-title: "Haodong Liu Notebook"
-output: github_notebook
+title: "Haodong Liu project deliverable"
+author: "Haodong Liu"
+output: github_document
 ---
 
 
-```{r}
+```{r, q1}
 library(plotly)
 library(tidyverse)
 
