@@ -144,7 +144,7 @@ labs(x ="Year",
      title="Number of Application for each Degree Type by Year")
 ```
 
-The dataset has official data of report from 2006 to 2015. The application report of three degrees, MFA, MS, PhD increase each year until 2015.
+The dataset has official data of report from 2006 to 2015. The application report of three degrees, MFA, MS, PhD increase each year until 2015. The overall shape has a plateauing trend.
 
 Next, we look at the distribution of applications by season and the counts of each admission decision.
 ```{r}
