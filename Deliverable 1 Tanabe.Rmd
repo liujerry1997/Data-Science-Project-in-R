@@ -1,7 +1,7 @@
 ---
 title: "MA415 Lab: Deliverable 1"
-author: "Superficial Intelligence (Nick, Jerry, Katherine, Cynthia)"
-output: html_document
+author: "Superficial Intelligence (Nicholas Tanabe, Haodong Liu, Huiwen He, Xiaoyi Zhang)"
+output: pdf_document
 ---
 ##Abstract
 
