@@ -8,7 +8,8 @@ clean %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>%
   ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "GPA Distribution")
 
 # comment
-The gpas for applicants is similar to a normal distribution skewed to the left. That implies that applicants with a higher gpa are more likely to pursue further education.   
+The distribution for applicants GPAs is similar to a normal distribution skewed to the left.
+That implies that applicants with a higher gpa are more likely to pursue further education and therefore the graph is skewed to the left with median larger than mean.   
 
 
 
