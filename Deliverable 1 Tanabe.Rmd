@@ -209,7 +209,7 @@ grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>%
   ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "GPA Distribution")
 ```
 
-We see that the distribution of GPAs for the observations tend to be left skewed, with the majority of candidates having >3.6 GPA. This is accepted as grad programs tend to look at GPA as a major factor, and students who aim to attend a grad school would likely have higher GPAs.
+We see that the distribution of GPAs for the observations tend to be left skewed, with the majority of candidates having more than 3.6 GPA. This is accepted as grad programs tend to look at GPA as a major factor, and students who aim to attend a grad school would likely have higher GPAs.
 
 Lastly, we look at the distribution of student status (internation, US, international with US degree, etc)
 ```{r}
@@ -219,7 +219,7 @@ grad %>% filter(!is.na(status)) %>%
   labs(titles = "Immigration Status") 
 ```
 
-From the chart above, we see that the majority of students applying are American.
+From the chart above, we see that the majority of students applying are American. In Immigration Status, around 60% of applicants are American and the rest of them are international students. We can tell that a big amount of graduate or Ph.D. students are coming from an international background. 
 
 ## Covariation Between Multiple Variables
 One covariation of interest is the influence of student status (internation, US, etc.) vs admission decision. 
@@ -260,7 +260,7 @@ ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = "RED", alpha = 
        x = "GRE Score")
 ```
 
-From the plot above the relationship between GPA and GRE seems to be positively correlated but is not as strong of a relationship as we expected. While most GPAs tend to be on the higher range, GRE scores seem to be more variable across application. 
+From the plot above the relationship between GPA and GRE seems to be positively correlated but is not as strong of a relationship as we expected. Most GPAs tend to be on the higher range: people densely fall into the range between 3.5 and 3.75; GRE scores seem to be more variable across application: scores for all applicants concentrate in the range between 300 and 325 with more outliers. 
 
 Lastly, to measure the correlation across all continuous variables, we create a scatterplot matrix, and correlation matrix.
 
