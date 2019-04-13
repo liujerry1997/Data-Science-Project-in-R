@@ -1,0 +1,372 @@
+---
+title: "MA415 Lab: Deliverable 1"
+author: "Superficial Intelligence (Nick, Jerry, Katherine, Cynthia)"
+output: github_document
+---
+##Abstract
+In this project, we explore graduate admissions data from Grad Cafe. We are interested in understanding how the different variables affect admissions decisions, and how admissions differ across different schools and degree programs. We do not find too much many surprising results in this exploratory data analysis, with the exception of the most selective Universities and Majors. While this dataset is likely the most robust dataset we can find regarding graduate admissions, the data is self-reported and will likely contain some bias. It is hard to predict which covariates are the best predictors of admission decisions, but we hypothesize that this would depend on the program and the performance of the student measured by test scores and GPA.
+
+##Dataset Description
+For this project, we will use data on graduate admissions from Grad Cafe provided by Debarghya Das on GitHub. The data is self-reported by prospective graduate students on https://www.thegradcafe.com/. The dataset contains 345,303 observations and 19 variables with a mix of continuous and categorical data. The dataset contains the following variables: 
+
+1. **rowid (integer)** - An integer id of the row
+
+2. **uni_name (character)** - The name of the university
+
+3. **major(character)** - The name of the intended major
+
+4. **degree (character)** - The type of degree program
+
+5. **season (character)** - The season of application
+
+6. **decision (character)** - The admission decision
+
+7. **decision_method (character) ** - The method through which decision was communicated
+
+8. **decision_date (character)** - The date that the decision was communicated
+
+9. **decision_timestamp (integer)** - timestamp of the decision
+
+10. **ugrad_gpa (double)** - undergraduate GPA
+
+11. **gre_verbal (double)** - GRE verbal score
+
+12. **gre_quant (double)** - GRE quantitative score
+
+13. **gre_writing (double)** - GRE writing score
+
+14. **is_new_gre (logical)** - whether or not the applicant took the new GRE
+
+15. **gre_subject (double)** -  GRE subject test score
+
+16. **status (character)** - Status of the candidate. Can be "International", "International with US Degree", "American" or "Other"
+
+17. **post_data (character)** - The date in which the observation was posted on grad cafe
+
+18. **post_timestamp (integer)** - timestamp of the post
+
+19. **comments (character)** - Applicants’ comments
+
+
+We decided to drop variables which either contain little information such as 'gre_subject', which few candidates reported, and 'rowid' which is redundant, and variables which are not of interest to us, such as 'comments', 'decision_method', 'post_data', and 'post_timestamp'. 
+
+Some problems that we may expect to encounter in the data are missing values, biased data due to self-reporting (it may be possible that positive results are more likely to be reported), and possibly fake data. In addition to this, the data will likely require some cleaning as user fill out forms and may be inconsistent (for example school name might be "Boston University"" or "BU"). Lastly, 'ugrad_gpa' could be based on different scales, such as a 10 point scale that is sometimes used internationally.
+
+
+##Research Questions
+Our main question of interest is "How do the different variables relate to admission decision?" We are interesting in understanding how the different factors such as GPA, GRE scores, the degree program you are applying to, or status affect whether you are ultimately chosen for admission. We also aim to answer several "sub-questions" such as: 
+
+* How do admissions statistics differ across schools? 
+
+* How do admissions differ between Boston University and "top tier" schools? 
+
+* How have admissions statistics changed over time? (2015, 2016, 2017)?
+
+* Is there a relationship between acceptance rate and season? (Is it easier to get enrolled in  Spring  semester or Fall semester?) 
+
+* Relationship between acceptance rate and student status (American vs  International  students; International students with a US degree vs those without)
+
+* Does applying earlier make a difference in getting into a school?
+
+We would like to explore these questions to help all of us who are interested in graduate school to better understand the admission process.
+
+##Data Import & Cleaning
+We start by importing the neccesary packages and the dataset. 
+
+```{r}
+library(tidyverse)
+#library(plotly)
+
+(grad <- read_csv("data/grad.csv",
+    col_types = cols_only( 
+      uni_name=col_character(),
+      major=col_character(),
+      degree=col_character(),
+      season=col_character(),
+      decision=col_character(),
+      decision_date=col_character(),
+      decision_timestamp=col_double(),
+      ugrad_gpa=col_double(),
+      gre_verbal=col_double(),
+      gre_quant=col_double(),
+      gre_writing=col_double(),
+      is_new_gre=col_logical(),
+      status=col_character(),
+      comments=col_character())))
+problems(grad)
+```
+As mentioned previously, we drop variables 'gre_subject','rowid','comments', 'decision_method', 'post_data', and 'post_timestamp'. Aside from this we have no problems regarding data import. While the dataset has some missing data, we keep all data for analyzing variation of single variables.
+
+##Variation of Single Variables:
+First we plot counts for the most popular grad schools and programs are.
+```{r}
+grad <- grad %>% filter(str_detect(major, "Computer")|str_detect(major, "computer"),degree=="PhD") %>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
+
+grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
+grad %>% group_by(uni_name,major) %>% count(uni_name, major) %>% arrange(desc(n))
+```
+From the tables above we see that the most popular college for grad applications is Columbia University with 10,901 applications. For the most popular specific grad programs, we see that Carnegie Mellon University, Computer Science is the most popular with 776 applications. 
+
+Next we assess the selectivity of different grad schools and programs.
+```{r}
+grad1 <- grad %>% group_by(uni_name) %>%filter(decision == "Accepted") %>% count(uni_name) %>% arrange(desc(n)) 
+grad2 <- grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
+colnames(grad1)[2] = "accepted"
+(top10 <-merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(n>100) %>% arrange(desc(n)) %>% head(10))
+
+grad3 <- grad %>% group_by(uni_name,major) %>% filter(decision == "Accepted") %>% count(uni_name,major) %>% arrange(desc(n)) 
+grad4 <- grad %>% group_by(uni_name,major) %>% count(uni_name,major) %>% arrange(desc(n))
+colnames(grad3)[3] = "accepted"
+merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% arrange(desc(n)) %>% head(10)
+
+merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)")
+merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)") %>% arrange(rate) %>% head(10)
+
+#filter for top 10 schools by ranking
+top10 <- head(top10,10)$uni_name 
+grad <- subset(grad, uni_name %in% top10)
+```
+Surprisingly, the most selective grad school and grad program are Virginia Consortium with an acceptance rate of 6.25% and University of Colorado, Boulder, Clinical Psychology with an acceptance rate of 1.89% respectively. We also observe that the BU as a whole is not too selective with an acceptance rate of 42.8%. We also obeserve that the most selective major at BU is genetic counseling with only 1 student accepted out of 20 (5%).
+
+Next, we look at the change in number of application over time.
+```{r}
+# Decision reported over time (2015, 2016, 2017)?
+grad$decision_date <- grad$decision_date %>% str_replace("\\(", "") %>% str_replace("\\)", "") 
+# Create a dataset for plotting number of application verses year
+grad_year = grad %>% select(degree, decision_date)  %>% 
+  filter(!is.na(decision_date)) %>%
+  mutate(yr = str_match(decision_date, "...\\d$")) %>%
+  filter(degree == "MS" | degree == "PhD") %>%
+  filter(as.integer(yr) < 2016 ) %>% filter(as.integer(yr) > 2005)
+grad_year$decision_date <- NULL
+# plot
+grad_year %>% group_by(yr, degree) %>% ggplot(aes(x = as.factor(yr), fill = degree)) + geom_bar(position = "dodge")+ 
+labs(x ="Year",
+     y ="Count",
+     title="Number of Application for each Degree Type by Year")
+```
+The dataset has official data of report from 2006 to 2015. The application report of three degrees, MFA, MS, PhD increase each year until 2015.
+
+Next, we look at the distribution of applications by season and the counts of each admission decision.
+```{r}
+# bar chart for season
+# bar chart includes both Spring semester and Fall semester
+grad %>% 
+  filter(!is.na(season)) %>%
+  ggplot() +
+  geom_bar(aes(x = season)) +
+  labs(title = "Admission Season")
+# bar chart for Fall semester only
+grad %>%
+  filter(!is.na(season)) %>%
+  group_by(fall = str_match(season, "^\\F..")) %>%
+  filter(!is.na(fall)) %>%
+  ggplot() +
+  geom_bar(aes(x = season)) +
+  labs(title = "Admission Season (Fall)")
+# bar chart for Spring semester only
+grad %>%
+  filter(!is.na(season)) %>%
+  group_by(fall = str_match(season, "^\\F..")) %>%
+  filter(is.na(fall)) %>%
+  ggplot() +
+  geom_bar(aes(x = season)) +
+  labs(title = "Admission Season (Spring)")
+# bar chart for decision
+grad %>%
+  filter(!is.na(decision)) %>%
+  ggplot() +
+  geom_bar(aes(x = decision)) +
+  labs(title = "Admission Decision")
+```
+We see that the total number of application are signicantly higher for the fall semester than the Spring semester. When looking at the distribution of decisions, the majority of candidates either recieve of report mainly acceptances and rejections, while a few candiates recieve other forms of responses such as waitlist, interview, or "other."
+
+Next, we plot the distribution of GRE test scores, and GPA. Because these is a variable "is_new_gre", which distinguished between old and new GRE, we filter for only new GRE scores, as the majority of observations report new GRE scores.
+```{r}
+# GRE Verbal
+grad %>% select(gre_verbal ,is_new_gre) %>% 
+filter(is_new_gre == TRUE & is.na(gre_verbal)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_verbal)) + 
+labs(x ="GRE Verbal Score",
+     y ="Count",
+     title="Frequencies of GRE Verbal Scores")
+# GRE quant
+grad %>% select(gre_quant ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_quant)) + 
+labs(x ="GRE Quant Score",
+     y ="Count",
+     title="Frequencies of GRE Quant Scores")
+
+grad %>% select(gre_quant,gre_verbal,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE & is.na(gre_verbal)!= TRUE ) %>% mutate(totalgre = gre_verbal+gre_quant) %>%
+  ggplot + geom_histogram(aes(totalgre)) + 
+labs(x ="GRE Total Score",
+     y ="Count",
+     title="Frequencies of GRE Total Scores")
+
+# GRE writing
+grad %>% select(gre_writing ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_writing)!= TRUE) %>% ggplot + geom_histogram(aes(gre_writing)) + 
+labs(x ="GRE Writing Score",
+     y ="Count",
+     title="Frequencies of GRE Writing Scores")
+```
+We see from the above histograms that GRE verbal scores range from 130 to 170 with a bell shape. Most of them concentrate 155 - 165. GRE quant score range from 130 to 170 with step like shape. Scores tend to concentrate 160 - 170. GRE writing scores range from 2 to 6 with a bell like shape. Most people get a score of 4.
+
+```{r}
+grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
+  ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "GPA Distribution")
+```
+We see that the distribution of GPAs for the observations tend to be left skewed, with the majority of candidates having >3.6 GPA. This is accepted as grad programs tend to look at GPA as a major factor, and students who aim to attend a grad school would likely have higher GPAs.
+
+Lastly, we look at the distribution of student status (internation, US, international with US degree, etc)
+```{r}
+grad %>% filter(!is.na(status)) %>% 
+  mutate(count = n()) %>% 
+  ggplot(aes(x = status)) + geom_bar() + 
+  labs(titles = "Immigration Status") 
+```
+From the chart above, we see that the majority of students applying are American.
+
+## Covariation Between Multiple Variables
+One covariation of interest is the influence of student status (internation, US, etc.) vs admission decision. 
+```{r}
+# student identity vs acceptance rate
+# table for student status vs decision
+(grid <- grad %>%
+  filter(!is.na(status), !is.na(decision)) %>%
+  group_by(status, decision) %>%
+  summarise(count = n()) %>%
+  spread(key = decision, value = count))
+# bar chart 
+grad %>%
+  filter(!is.na(decision), !is.na(status)) %>%
+  ggplot() +
+  geom_bar(aes(status, fill = decision), position = "dodge") +
+  labs(title = "Admission Decision vs Status")
+# acceptance rate based on student status
+grid$sum = rowSums(grid[, c("Accepted", "Interview", "Other", "Rejected", "Wait listed")])
+grid %>%
+  gather('Accepted', 'Interview', 'Other', 'Rejected', 'Wait listed', 
+         key = "decision", value = "cases") %>%
+  mutate(prop = cases/sum) %>%
+  filter(status != "Other") %>%
+  ggplot(aes(group = decision, status, prop, color = decision)) + 
+  geom_line()
+```
+From the charts above, it seems that US based students tend to have higher acceptance rates than international students, and internation with US degree students. The bar chart shows that, for American students, the number of getting accepted is higher than the number of getting rejected. However, for international students and international students with US degree, the number of acceptance is lower than the number of rejection. To further investigate if international students are treated differently, we calculate the decision rate. For each status category, we divide the total number of each admission decision by total number of students to get the decision rate. From the plot we can tell that the proportion of getting accepted is higher for American students than international students, and the proportion of getting rejected is higher for international students with US degree.
+
+
+Another covariation of interest is the relationship between GPA and GREE scores. For this we summed GRE verbal and GRE quant to get the full GRE score, and created a scatter plot against GPA. We filtered GPA to be less than 4, as GPA of different scales are not comparable.
+```{r}
+grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4.0 & ugrad_gpa >1, is_new_gre == TRUE) %>% mutate(GRE_Total = gre_verbal + gre_quant) %>% group_by(uni_name) %>% mutate(mean_gpa = mean(ugrad_gpa), mean_GRE = mean(GRE_Total)) %>% ungroup() %>%
+ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = uni_name, alpha = 0.001)) +
+  labs(titles = "Relationship between GPA and GRE Score",
+       y = "GPA",
+       x = "GRE Score")
+grad <- grad[complete.cases(grad), ]
+
+grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4.0 & ugrad_gpa >1, is_new_gre == TRUE & decision == "Accepted") %>% mutate(GRE_Total = gre_verbal + gre_quant) %>% group_by(uni_name) %>% mutate(mean_gpa = mean(ugrad_gpa), mean_GRE = mean(GRE_Total)) %>% ungroup() %>%
+ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = uni_name, alpha = 0.001)) +
+  labs(titles = "Relationship between GPA and GRE Score",
+       y = "GPA",
+       x = "GRE Score")
+
+#grad[complete.cases(grad),] %>% mutate(acceptance = decision == "Accepted") %>% filter(ugrad_gpa<=4,is_new_gre == TRUE) %>% group_by(acceptance) mutate(gre_total=gre_verbal+gre_quant)
+
+```
+From the plot above the relationship between GPA and GRE seems to be positively correlated but is not as strong of a relationship as we expected. While most GPAs tend to be on the higher range, GRE scores seem to be more variable across application. 
+
+Lastly, to measure the correlation across all continuous variables, we create a scatterplot matrix, and correlation matrix.
+
+```{r}
+g <- grad[complete.cases(,-14),] %>% mutate(acceptance = decision == "Accepted") %>% filter(ugrad_gpa<=4,is_new_gre == TRUE) %>% mutate(gre_total=gre_verbal+gre_quant) %>% select(ugrad_gpa, gre_verbal,gre_quant,gre_writing,gre_total,acceptance) %>% pairs()
+```
+This plot is somewhat unclear due to the verse dense concentration of the datapoints. In the next step, we will likely use regression to model the probability of acceptance based on the different covariates.
+
+##Discussion: 
+From this exploratory data analysis, we confirm many of the hypotheses that we had going into this project. For example, we confirmed our hypotheses that more students apply in the fall semester than the spring semester and that the majority of students applying (or reported) are American. We confirmed relationships between variables such as GPA and GRE scores. We learned several things as well. For example, we learned the distribution of GPA is left skewed, and GRE scores have an abnormal distribution, with several "spikes" among certain scores. We were surprised to see that American students tended to have higher rates of acceptance than international students.
+
+While this is a very interesting and robust dataset to analyze, there are also several problems we encountered. First, the dataset is not very clean, as it is self-reported. For example, the names of Universities and Majors are not always consistent. For example, some students may write "Boston University (BU)" while others write the name of the specific college at BU such as "Boston University - Metropolitan College." We also noticed that scales of scores and GPA are not always consistent. For example, GPA is most often reported on a 4.0 scale, however, some responses included other scales such as 10 point scale. These will all be problems that we have to work around when going into modeling.
+
+
+##Modelling
+ 
+ 
+```{r}
+<<<<<<< HEAD
+grad <- grad[complete.cases(grad[,-14]), ] %>% filter(is_new_gre == TRUE, ugrad_gpa <=4,status!="Other")%>% mutate(season1 = str_sub(season,1,1), decision1 = (decision=="Accepted"))
+full_mod <- glm(decision1 ~ (ugrad_gpa+gre_verbal+gre_quant+research)*status-1, data = grad, family = binomial)
+(gradmodel <- step(full_mod))
+summary(gradmodel)
+=======
+grad <- grad %>% filter(is_new_gre == TRUE & !is.na(gre_quant|gre_verbal|ugrad_gpa) & ugrad_gpa <= 4)  %>% mutate(decision1 = (decision=="Accepted"))
+
+full_mod <- glm(decision1 ~ ugrad_gpa+gre_verbal+gre_quant+status, data = grad, family = binomial)
+null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
+>>>>>>> 4274fcf7a6c980ea96eb760e261f2a4494c13a18
+
+grad %>%
+ mutate(pred = predict(gradmodel,
+ type = "response")) %>%
+ ggplot(aes(factor(decision1), pred)) +
+ geom_boxplot() +
+ geom_point(aes(color = status),
+ position = "jitter")
+
+gg <- grad %>%
+ mutate(pred = predict(gradmodel,
+ type = "response")) #%>% select(decision, pred)
+```
+
+
+```{r}
+# check assumptions
+# 1. outcome is binary
+# 2. linear relationship between the logit of the outcome and each predictor variables
+# 3. no influential values
+# 4. no high intercorrelations
+
+library(broom)
+p <- predict(full_mod, type = "response")
+grad_mod <- grad %>%
+  select_if(is.numeric) %>% select(-1)
+predictors <- colnames(grad_mod) 
+
+grad_mod <- (grad_mod %>%
+  mutate(logit = log(p/(1-p))) %>%
+  gather(key = "predictors", value = "value", -logit))
+
+# check linearity between x and logit of the outcome
+ggplot(grad_mod, aes(logit, value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+# check influencial values
+# top3 largest values
+plot(full_mod, which = 4, id.n = 3)
+
+# plot the standardized residual
+data <- augment(full_mod) %>% 
+  mutate(index = 1:n())
+data %>% top_n(3, .cooksd)
+ggplot(data, aes(index, .std.resid)) + 
+  geom_point(aes(color = decision1)) +
+  theme_bw()
+# if standardized residual is greater than 3 -> Influential
+data %>% 
+  filter(abs(.std.resid) > 3)
+
+
+
+#need covariance between data
+
+
+```
+
+```{r}
+
+```
+
+
