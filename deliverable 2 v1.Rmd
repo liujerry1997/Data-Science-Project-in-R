@@ -281,11 +281,53 @@ While this is a very interesting and robust dataset to analyze, there are also s
  
  
 ```{r}
-grad <- grad %>% mutate(decision1 = (decision=="Accepted"))
+grad <- grad %>% 
+  mutate(decision1 = (decision=="Accepted")) %>%
+  filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE & is.na(gre_verbal)!= TRUE & is.na(gre_writing) != TRUE, ugrad_gpa <=4, is.na(ugrad_gpa) != TRUE) %>%
+  filter(uni_name != "Purdue University")
+
 full_mod <- glm(decision1 ~ ugrad_gpa+gre_verbal+gre_quant+gre_writing+status, data = grad, family = binomial)
+full_mod_cb <- glm(decision1 ~ ugrad_gpa+gre_verbal^3+gre_quant^3++status, data = grad, family = binomial)
 null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
 
 backwards = step(full_mod)
+backwards_cb = step(full_mod_cb)
 summary(backwards)
+summary(backwards_cb)
+
+```
+
+```{r}
+# check assumptions
+# 1. outcome is binary
+# 2. linear relationship between the logit of the outcome and each predictor variables
+# 3. no influential values
+# 4. no high intercorrelations
+
+# linearity
+probabilities <- predict(full_mod_cb, type = "response")
+grad_mod <- grad %>% 
+  dplyr::select_if(is.numeric) %>%
+  select(-decision_timestamp)
+predictors <- colnames(grad_mod)
+
+
+grad_mod <- grad_mod %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(grad_mod, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+
+#
+
+
+plot(full_mod_cb, which = 4, id.n = 3)
+car::vif(full_mod_cb)
+
 ```
 
