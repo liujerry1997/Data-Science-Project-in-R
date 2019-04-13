@@ -313,10 +313,10 @@ predictors <- colnames(grad_mod)
 
 grad_mod <- (grad_mod %>%
   mutate(logit = log(p/(1-p))) %>%
-  gather(key = "predictors", value = "pred", -logit))
+  gather(key = "predictors", value = "value", -logit))
 
 # check linearity between x and logit of the outcome
-ggplot(grad_mod, aes(logit, pred))+
+ggplot(grad_mod, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
@@ -344,5 +344,8 @@ data %>%
 
 ```
 
+```{r}
+
+```
 
 
