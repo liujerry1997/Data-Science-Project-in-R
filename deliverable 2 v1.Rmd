@@ -345,6 +345,22 @@ data %>%
 ```
 
 ```{r}
+#Correlation matrix
+
+grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+
+(grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
+
+my_data1 <- grad_noNA[, c(8,11,14)]
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+
+
+#(rcorr(as.matrix(my_data)))
+
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+(rcorr(as.matrix(my_data2)))
+
+```
 
 ```
 
