@@ -255,8 +255,15 @@ From the charts above, it seems that US based students tend to have higher accep
 
 Another covariation of interest is the relationship between GPA and GREE scores. For this we summed GRE verbal and GRE quant to get the full GRE score, and created a scatter plot against GPA. We filtered GPA to be less than 4, as GPA of different scales are not comparable.
 ```{r}
-grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4.1 & ugrad_gpa >1, is_new_gre == TRUE) %>% mutate(GRE_Total = gre_verbal + gre_quant) %>% group_by(uni_name) %>% mutate(mean_gpa = mean(ugrad_gpa), mean_GRE = mean(GRE_Total)) %>% ungroup() %>%
-ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = "RED", alpha = 0.001)) +
+grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4.0 & ugrad_gpa >1, is_new_gre == TRUE) %>% mutate(GRE_Total = gre_verbal + gre_quant) %>% group_by(uni_name) %>% mutate(mean_gpa = mean(ugrad_gpa), mean_GRE = mean(GRE_Total)) %>% ungroup() %>%
+ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = uni_name, alpha = 0.001)) +
+  labs(titles = "Relationship between GPA and GRE Score",
+       y = "GPA",
+       x = "GRE Score")
+grad <- grad[complete.cases(grad), ]
+
+grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4.0 & ugrad_gpa >1, is_new_gre == TRUE & decision == "Accepted") %>% mutate(GRE_Total = gre_verbal + gre_quant) %>% group_by(uni_name) %>% mutate(mean_gpa = mean(ugrad_gpa), mean_GRE = mean(GRE_Total)) %>% ungroup() %>%
+ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = uni_name, alpha = 0.001)) +
   labs(titles = "Relationship between GPA and GRE Score",
        y = "GPA",
        x = "GRE Score")
@@ -281,6 +288,7 @@ While this is a very interesting and robust dataset to analyze, there are also s
  
  
 ```{r}
+<<<<<<< HEAD
 grad <- grad %>% 
   mutate(decision1 = (decision=="Accepted")) %>%
   filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE & is.na(gre_verbal)!= TRUE & is.na(gre_writing) != TRUE, ugrad_gpa <=4, is.na(ugrad_gpa) != TRUE) %>%
@@ -288,6 +296,11 @@ grad <- grad %>%
 
 full_mod <- glm(decision1 ~ ugrad_gpa+gre_verbal+gre_quant+gre_writing+status, data = grad, family = binomial)
 full_mod_cb <- glm(decision1 ~ ugrad_gpa+gre_verbal^3+gre_quant^3++status, data = grad, family = binomial)
+=======
+grad <- grad %>% filter(is_new_gre == TRUE & !is.na(gre_quant|gre_verbal|ugrad_gpa) & ugrad_gpa <= 4)  %>% mutate(decision1 = (decision=="Accepted"))
+
+full_mod <- glm(decision1 ~ ugrad_gpa+gre_verbal+gre_quant+status, data = grad, family = binomial)
+>>>>>>> 19a3abffb54eaeeee13be9f79f7eb97a109dc275
 null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
 
 backwards = step(full_mod)
@@ -331,3 +344,41 @@ car::vif(full_mod_cb)
 
 ```
 
+```{r linearity assumption}
+
+p <- predict(full_mod, type = "response")
+
+grad_mod <- grad %>%
+  select_if(is.numeric) %>% select(-1)
+
+predictors <- colnames(grad_mod) 
+
+grad_mod <- (grad_mod %>%
+  mutate(logit = log(p/(1-p))) %>%
+  gather(key = "predictors", value = "pred", -logit))
+
+ggplot(grad_mod, aes(logit, pred))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+plot(full_mod, which = 4, id.n = 3)
+
+library(broom)
+data <- augment(full_mod) %>% 
+  mutate(index = 1:n())
+
+data %>% top_n(3, .cooksd)
+
+ggplot(data, aes(index, .std.resid)) + 
+  geom_point(aes(color = decision1)) +
+  theme_bw()
+
+data %>% 
+  filter(abs(.std.resid) > 3)
+
+#need covariance between data
+
+
+```
