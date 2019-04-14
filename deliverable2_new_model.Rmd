@@ -142,7 +142,7 @@ data_int %>%
   filter(abs(.std.resid) > 3)
 
 #Correlation matrix
-library("hmisc")
+library(Hmisc)
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
 
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
@@ -190,7 +190,7 @@ data %>%
   filter(abs(.std.resid) > 3)
 
 #Correlation matrix
-library("hmisc")
+library(Hmisc)
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
 
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
