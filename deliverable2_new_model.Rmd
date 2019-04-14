@@ -158,7 +158,7 @@ my_data1 <- grad_noNA[, c(8,11,14)]
 my_data2 <- grad_noNA[, c(8,9,10,11)]
 
 
-#(rcorr(as.matrix(my_data)))
+#(rcorr(as.matrix(my_data1))) This is for ugrad_gpa, gre_total gre_writing
 
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
@@ -207,13 +207,23 @@ grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE
 
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
 
-my_data1 <- grad_noNA[, c(8,11,14)]
+(my_data1 <- grad_noNA[, c(8,11,17)])
 my_data2 <- grad_noNA[, c(8,9,10,11)]
 
-
-#(rcorr(as.matrix(my_data)))
+#This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
+(rcorr(as.matrix(my_data1)))
 
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
-(rcorr(as.matrix(my_data2)))
+#(rcorr(as.matrix(my_data2)))
 ```
 
+```{r}
+#Test for the inclusion of a Categorical Variable
+#H0: full_mod = full_mod_int
+#Ha: full_mod = full_mod_int
+
+anova( full_mod, full_mod_int, test = "Chisq")
+
+#
+
+```
