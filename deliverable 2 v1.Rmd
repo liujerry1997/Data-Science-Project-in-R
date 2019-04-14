@@ -288,7 +288,7 @@ While this is a very interesting and robust dataset to analyze, there are also s
  
  
 ```{r}
-grad <- grad %>% filter(is_new_gre == TRUE & !is.na(gre_quant|gre_verbal|ugrad_gpa) & ugrad_gpa <= 4)  %>% mutate(decision1 = (decision=="Accepted"))
+grad <- grad %>% filter(is_new_gre == TRUE & !is.na(gre_quant|gre_verbal|ugrad_gpa) & ugrad_gpa <= 4)  %>% mutate(GRE_total = gre_verbal + gre_quant, decision1 = (decision=="Accepted"))
 
 full_mod <- glm(decision1 ~ ugrad_gpa+gre_verbal+gre_quant+status, data = grad, family = binomial)
 null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
@@ -332,6 +332,7 @@ data %>%
   filter(abs(.std.resid) > 3)
 
 #need covariance between data
+
 
 
 ```
