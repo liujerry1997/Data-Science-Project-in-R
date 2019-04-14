@@ -295,6 +295,8 @@ null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
 
 backwards = step(full_mod)
 summary(backwards)
+
+
 ```
 
 
@@ -336,6 +338,8 @@ ggplot(data, aes(index, .std.resid)) +
 # if standardized residual is greater than 3 -> Influential
 data %>% 
   filter(abs(.std.resid) > 3)
+
+
 
 
 
