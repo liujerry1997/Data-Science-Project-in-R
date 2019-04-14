@@ -28,9 +28,9 @@ problems(grad)
 
 # Data Cleaning
 ```{r}
-grad <- grad %>% filter(str_detect(major, "Computer"))
-                        
-                        #|str_detect(major, "computer"),degree=="PhD")
+grad <- grad %>% filter(str_detect(major, "Computer")|str_detect(major, "computer"))
+
+#,degree=="PhD")
 
 #%>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
 
@@ -163,6 +163,10 @@ my_data2 <- grad_noNA[, c(8,9,10,11)]
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
 ```
+
+##Assumption 
+First, since we set the accepted decisition
+First, binary logistic regression requires the dependent variable to be binary and ordinal logistic regression requires the dependent variable to be ordinal.
 
 
 
