@@ -30,7 +30,9 @@ problems(grad)
 ```{r}
 grad <- grad %>% filter(str_detect(major, "Computer"))
                         
-                        #|str_detect(major, "computer"),degree=="PhD") %>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
+                        #|str_detect(major, "computer"),degree=="PhD")
+
+#%>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
 
 grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 grad %>% group_by(uni_name,major) %>% count(uni_name, major) %>% arrange(desc(n))
@@ -126,6 +128,8 @@ ggplot(grad_mod_int, aes(logit, value))+
   theme_bw() + 
   facet_wrap(~predictors_int, scales = "free_y")
 
+
+
 # check influencial values
 # top3 largest values
 plot(full_mod_int, which = 4, id.n = 3)
@@ -136,10 +140,13 @@ data_int <- augment(full_mod_int) %>%
 data_int %>% top_n(3, .cooksd)
 ggplot(data_int, aes(index, .std.resid)) + 
   geom_point(aes(color = decision1)) +
-  theme_bw()
+  theme_bw() + labs(y = 'Deviance Residuals', x = 'Index', titles = 'Residuals Plot' )
 # if standardized residual is greater than 3 -> Influential
 data_int %>% 
   filter(abs(.std.resid) > 3)
+
+#multicollinearity
+car::vif(full_mod_int)
 
 #Correlation matrix
 library(Hmisc)
@@ -156,6 +163,8 @@ my_data2 <- grad_noNA[, c(8,9,10,11)]
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
 ```
+
+
 
 ```{r}
 p <- predict(full_mod, type = "response")
@@ -184,10 +193,13 @@ data <- augment(full_mod) %>%
 data %>% top_n(3, .cooksd)
 ggplot(data, aes(index, .std.resid)) + 
   geom_point(aes(color = decision1)) +
-  theme_bw()
+  theme_bw()+ labs(y = 'Deviance Residuals', x = 'Index', titles = 'Residuals Plot' )
 # if standardized residual is greater than 3 -> Influential
 data %>% 
   filter(abs(.std.resid) > 3)
+
+#Multicollinearity
+car::vif(full_mod)
 
 #Correlation matrix
 library(Hmisc)
