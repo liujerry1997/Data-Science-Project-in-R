@@ -215,19 +215,21 @@ grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE
 my_data2 <- grad_noNA[, c(8,9,10,11)]
 
 #This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
-(rcorr(as.matrix(my_data1)))
+#(rcorr(as.matrix(my_data1)))
 
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
-#(rcorr(as.matrix(my_data2)))
+(rcorr(as.matrix(my_data2)))
 ```
 
 ```{r}
 #Test for the inclusion of a Categorical Variable
-#H0: full_mod = full_mod_int
+#H0: full_mod = full_mod
 #Ha: full_mod = full_mod_int
+
+# Significant Level: 0.05
 
 anova( full_mod, full_mod_int, test = "Chisq")
 
-#
+# Pr(>Chi) is 0.1581, which is less than siginificant level 0.05
 
 ```
