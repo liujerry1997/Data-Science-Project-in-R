@@ -1,11 +1,19 @@
 ---
 title: "deliverable#2"
+<<<<<<< HEAD
 output: github_document
+=======
+output: html_document
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 ---
 # Data Importing
 ```{r}
 library(tidyverse)
 #library(plotly)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 (grad <- read_csv("data/grad.csv",
     col_types = cols_only( 
       uni_name=col_character(),
@@ -29,7 +37,14 @@ problems(grad)
 ```{r}
 grad <- grad %>% filter(str_detect(major, "Computer")|str_detect(major, "computer"))
 
+<<<<<<< HEAD
 #,degree=="PhD") %>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
+=======
+#,degree=="PhD")
+
+#%>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 grad %>% group_by(uni_name,major) %>% count(uni_name, major) %>% arrange(desc(n))
 ```
@@ -40,15 +55,30 @@ grad1 <- grad %>% group_by(uni_name) %>%filter(decision == "Accepted") %>% count
 grad2 <- grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 colnames(grad1)[2] = "accepted"
 (top10 <-merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(n>100) %>% arrange(desc(n)) %>% head(10))
+<<<<<<< HEAD
+=======
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 grad3 <- grad %>% group_by(uni_name,major) %>% filter(decision == "Accepted") %>% count(uni_name,major) %>% arrange(desc(n)) 
 grad4 <- grad %>% group_by(uni_name,major) %>% count(uni_name,major) %>% arrange(desc(n))
 colnames(grad3)[3] = "accepted"
 merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% arrange(desc(n)) %>% head(10)
+<<<<<<< HEAD
 merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)")
 merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)") %>% arrange(rate) %>% head(10)
 #filter for top 10 schools by ranking
 top10 <- head(top10,10)$uni_name 
 grad <- subset(grad, uni_name %in% top10)
+=======
+
+merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)")
+merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)") %>% arrange(rate) %>% head(10)
+
+#filter for top 10 schools by ranking
+top10 <- head(top10,10)$uni_name 
+grad <- subset(grad, uni_name %in% top10)
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 #filter
 grad <- grad[complete.cases(grad), ]
 ```
@@ -56,6 +86,7 @@ grad <- grad[complete.cases(grad), ]
 # Modeling
 ```{r}
 grad <- grad[complete.cases(grad[,-14]), ] %>% filter(is_new_gre == TRUE, ugrad_gpa <=4,status!="Other")%>% mutate(season1 = str_sub(season,1,1), decision1 = (decision=="Accepted"), GRE_Total = gre_verbal + gre_quant)
+<<<<<<< HEAD
 # models
 full_mod_int <- glm(decision1 ~ (ugrad_gpa+GRE_Total+gre_writing)*status -1, data = grad, family = binomial)
 (gradmodel_int <- step(full_mod_int))
@@ -63,6 +94,20 @@ summary(gradmodel_int)
 full_mod <- glm(decision1 ~ ugrad_gpa+GRE_Total+gre_writing+status-1, data = grad, family = binomial)
 (gradmodel <- step(full_mod))
 summary(gradmodel)
+=======
+
+# models
+full_mod_int <- glm(decision1 ~ (ugrad_gpa+GRE_Total+gre_writing)*status-1, data = grad, family = binomial)
+(gradmodel_int <- step(full_mod_int))
+summary(gradmodel_int)
+summary(full_mod_int)
+
+full_mod <- glm(decision1 ~ ugrad_gpa+GRE_Total+gre_writing+status-1, data = grad, family = binomial)
+(gradmodel <- step(full_mod))
+summary(gradmodel)
+
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
 
 grad %>%
@@ -73,6 +118,10 @@ grad %>%
  geom_point(aes(color = status),
  position = "jitter") +
  labs(title = "model with interaction")
+<<<<<<< HEAD
+=======
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 grad %>%
  mutate(pred = predict(gradmodel,
  type = "response")) %>%
@@ -85,10 +134,15 @@ grad %>%
 gg_int <- grad %>%
  mutate(pred = predict(gradmodel_int,
  type = "response")) #%>% select(decision, pred)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 gg <- grad %>%
  mutate(pred = predict(gradmodel,
  type = "response")) #%>% select(decision, pred)
 ```
+<<<<<<< HEAD
 
 For the model that includes interaction:
 The regression coefficient for ugrad_gpa is $\hat{\beta_(ugradgpa)} = 1.146643$ meaning that for a one-unit increase in undergraduate gpa the logit-transformed probability of getting accepted to the program will increase by 1.15. Predictor GRE_Total has a coefficient $\hat{\beta_(GREtotal)} = 0.031106$, showing that for a one-unit increase in GRE total scores the log odds will increase by 0.03. We also include categorical variable status represneting applicant's identity. The corresponding coefficient $\hat{\beta_(American)} = -13.403241$ shows that if the applicant is an American students, the log odds will decrease by 13.4, holding all other independent variables constant, $\hat{\beta_(International)} = -12.782405$ shows the change in log odds given the student is an international student, and $\hat{\beta_(USdegree)} = -15.544697$ shows the change in log odds given the student is an international student with a US degree.
@@ -130,6 +184,13 @@ exp(prediction_inter_us_n) / (1 + exp(prediction_inter_us_n))
 ```
 
 Using same mean level GPA, GRE total score and writing score, our simple logistic model predicts that the probability of an American student getting accepted to the program is 49.1% and the probaility for international student without a US degree and those with a US degree is 39% and 46.9% respectively.
+=======
+#Distribution of the Respond
+In model without internation distribution, the mean of predicted probabilities of rejected students is around 0.41, while the mean of predicted probabilities of accepted students is around 0.43, which is slightly higher than the mean of predicted probabilities of rejected students. Since their interval are overlapped, it means that the prediction may not be significant enough to explain the success of a student being accepted. In addition, the plots are fairly scattered, meaning that there does no exist a certain pattern to explain the trend.
+
+In model with interation, the mean of predicted probabilities of rejected students is around 0.4, while the mean of predicted probabilities of accepted students is around 0.45, which is slightly higher than the mean of predicted probabilities of rejected students. Since their interval are overlapped, it means that the prediction may not be significant enough to explain the success of a student being accepted. However, the plots are more densely concentrated than the one without interation.
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 
 ```{r}
 # check assumptions
@@ -137,29 +198,53 @@ Using same mean level GPA, GRE total score and writing score, our simple logisti
 # 2. linear relationship between the logit of the outcome and each predictor variables
 # 3. no influential values
 # 4. no high intercorrelations
+<<<<<<< HEAD
+=======
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 library(broom)
 p_int <- predict(full_mod_int, type = "response")
 grad_mod_int <- grad %>%
   select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
 predictors_int <- colnames(grad_mod_int) 
+<<<<<<< HEAD
 grad_mod_int <- (grad_mod_int %>%
   mutate(logit = log(p_int/(1-p_int))) %>%
   gather(key = "predictors_int", value = "value", -logit))
+=======
+
+grad_mod_int <- (grad_mod_int %>%
+  mutate(logit = log(p_int/(1-p_int))) %>%
+  gather(key = "predictors_int", value = "value", -logit))
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 # check linearity between x and logit of the outcome
 ggplot(grad_mod_int, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
+<<<<<<< HEAD
   facet_wrap(~predictors_int, scales = "free_y")
 # check influencial values
 # top3 largest values
 plot(full_mod_int, which = 4, id.n = 3)
+=======
+  facet_wrap(~predictors_int, scales = "free_y")+labs(title = 'The Linearity of Independent Variables' )
+
+
+
+# check influencial values
+# top3 largest values
+plot(full_mod_int, which = 4, id.n = 3)
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 # plot the standardized residual
 data_int <- augment(full_mod_int) %>% 
   mutate(index = 1:n())
 data_int %>% top_n(3, .cooksd)
 ggplot(data_int, aes(index, .std.resid)) + 
   geom_point(aes(color = decision1)) +
+<<<<<<< HEAD
   theme_bw()
 # if standardized residual is greater than 3 -> Influential
 data_int %>% 
@@ -183,21 +268,75 @@ predictors <- colnames(grad_mod)
 grad_mod <- (grad_mod %>%
   mutate(logit = log(p/(1-p))) %>%
   gather(key = "predictors", value = "value", -logit))
+=======
+  theme_bw() + labs(y = 'Deviance Residuals', x = 'Index', titles = 'Residuals Plot' )
+# if standardized residual is greater than 3 -> Influential
+data_int %>% 
+  filter(abs(.std.resid) > 3)
+
+#multicollinearity
+car::vif(full_mod_int)
+
+#Correlation matrix
+library(Hmisc)
+
+my_data1 <- grad[, c(8,11,17)]
+my_data2 <- grad[, c(8,9,10,11)]
+
+
+(rcorr(as.matrix(my_data1))) 
+#This is for ugrad_gpa, gre_total gre_writing
+
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+#(rcorr(as.matrix(my_data2)))
+```
+
+##Assumption 
+First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
+
+Second, logistic regression also assumes the linearity of independent variables.As shown in "The linearity of independent variables", the logit of GRE is quite linear to the accepted probability in logit scale. Even though there exists an U-shaped trend at the end of the parabala, the majority of gpa points associated linearly to the logit outcome of undergraduate gpa. However, the scatter plots of gre_writing shows non_linearity, similar to a cubic term.
+
+Third, some outliers may be influential enough to alter the quality of the logistic regression model. Therefore, we calculated the Cook's distance for each points; the higher the leverage and residuals of that point, the higher its Cook’s distance. As demonstrated in Cook's distance graph, there exist couple of spikes in the graph. To further investigate this issue, the deviance residuals plots has ben constructed. Since it does not have any observations whose cook's value is large than 3, we conclude that the dataset does not have any influential outliers. 
+
+Last but not least, since the variables are intercorrlated, we take this into consideration and use interation terms to overcome this issue.
+
+
+
+```{r}
+p <- predict(full_mod, type = "response")  
+grad_mod <- grad %>%
+  select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
+predictors <- colnames(grad_mod) 
+
+grad_mod <- (grad_mod %>%
+  mutate(logit = log(p/(1-p))) %>%
+  gather(key = "predictors", value = "value", -logit))
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 # check linearity between x and logit of the outcome
 ggplot(grad_mod, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
   facet_wrap(~predictors, scales = "free_y")
+<<<<<<< HEAD
 # check influencial values
 # top3 largest values
 plot(full_mod, which = 4, id.n = 3)
+=======
+
+# check influencial values
+# top3 largest values
+plot(full_mod, which = 4, id.n = 3)
+
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
 # plot the standardized residual
 data <- augment(full_mod) %>% 
   mutate(index = 1:n())
 data %>% top_n(3, .cooksd)
 ggplot(data, aes(index, .std.resid)) + 
   geom_point(aes(color = decision1)) +
+<<<<<<< HEAD
   theme_bw()
 # if standardized residual is greater than 3 -> Influential
 data %>% 
@@ -219,3 +358,54 @@ my_data2 <- grad_noNA[, c(8,9,10,11)]
 
 ```
 
+=======
+  theme_bw()+ labs(y = 'Deviance Residuals', x = 'Index', titles = 'Residuals Plot' )
+# if standardized residual is greater than 3 -> Influential
+data %>% 
+  filter(abs(.std.resid) > 3)
+
+
+#Correlation matrix
+library(Hmisc)
+grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+
+(grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
+
+(my_data1 <- grad_noNA[, c(8,11,17)])
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+
+#This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
+(rcorr(as.matrix(my_data1)))
+
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+(rcorr(as.matrix(my_data2)))
+```
+##Assumption_w/o interation
+First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
+
+Second, logistic regression also assumes the linearity of independent variables.As shown in "The linearity of independent variables", the logit of GRE and undergraduate gpa are fairly linear to the accepted probability in logit scale. However, the scatter plots of gre_writing fits a parabola, instead of a linear line.
+
+Third, some outliers may be influential enough to alter the quality of the logistic regression model. Therefore, we calculated the Cook's distance for each points; the higher the leverage and residuals of that point, the higher its Cook’s distance. As demonstrated in Cook's distance graph, there exist couple of spikes in the graph. To further investigate this issue, the deviance residuals plots has ben constructed. Since it does not have any observations whose cook's value is large than 3, we conclude that the dataset does not have any influential outliers. 
+
+Last but not least, from the covariance matrix, we can tell that each term are corrlated with each other since its p value is near 0. Therefore, we incorporate interation terms in our further model to overcome this disadvantage.
+
+
+```{r}
+install.packages("carData")  # Delete this line after install 
+library(car)
+
+(anova( full_mod, full_mod_int, test = "Chisq"))
+
+(Anova(full_mod_int, type = "II"))
+
+```
+
+#Test for the inclusion of a Categorical Variable
+#H0: full_mod = full_mod
+#Ha: full_mod = full_mod_int
+# Significant Level: 0.05
+
+Pr(>Chi) for two models is 0.1581, which is bigger than siginificant level 0.05. Therefore, two models are not significantly different.
+
+# Pr(>Chi) for ugrad_gpa, GRE_Total, gre_writing and status are all smaller than siginificant level 0.05, while all the interaction effect is not signficant. Therefore, the anova table indicates that the main effect are significant, and interaction effect is not significant.
+>>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
