@@ -34,7 +34,7 @@ grad2 <- grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 colnames(grad1)[2] = "accepted"
 ```
 #Abstract
-In this deliverable, we aim to better understand the factors affecting admission decisions by fitting a logistic model to the data. The covariates we use for the model include undergrad GPA, GRE Scores, Student Status, and interaction terms. While our model was able to predict to some degree, which students were more likely to be accepted, the predicted probabilities were too variable to be useful for prediction. This is likely due to many variables being missing from the data such as research experience, reccomendations, reputation of undergraduate institution and so on.
+In this project, we analyzeD the dataset provided by Grad cafe website. Our main goal is to investigate the question of how different variables, such as GRE score and undergraduate GPA, relate to the admission decision. In this deliverable, we focus our analysis on graduate applications to US Top 10 computer science programs. We aim to better understand the factors affecting admission decisions by fitting a logistic model to the data. The covariates we use for the model include undergrad GPA, GRE Scores, Student Status, and interaction terms. We used the model to predict the probability of a student getting accepted. The model shows that, for an American student with average grade, the probability of getting is 49%. The probability for an average international student is 39%. For an average international student with a US degree, the probability is 46%. While our model was able to predict to some degree, which students were more likely to be accepted, the predicted probabilities were too variable to be useful for prediction. This is likely due to many variables being missing from the data such as research experience, reccomendations, reputation of undergraduate institution and so on.
 
 
 #Research Questions and Modeling Methods
@@ -266,18 +266,21 @@ Last but not least, from the covariance matrix, we can tell that each term are c
 ```{r,echo=FALSE}
 ### Please add title to this plot
 
-interaction.plot(x.factor     = gg_int$status,
-                 trace.factor = gg_int$gre_writing, 
-                 response     = gg_int$pred, 
+(wr = gg_int %>% mutate(gre_writing = as.integer(gre_writing)))
+
+interaction.plot(x.factor     = wr$status,
+                 trace.factor = wr$gre_writing, 
+                 response     = wr$pred, 
                  fun = mean,
                  type="b",
-                 col=c("black","red","green"),  ### Colors for levels of trace var.
-                 pch=c(19, 17, 15),             ### Symbols for levels of trace var.
+                 col=c("black","red","green","blue","orange"),  ### Colors for levels of trace var.
+                 pch=c(19),             ### Symbols for levels of trace var.
                  fixed=TRUE,                    ### Order by factor order in data
                  leg.bty = "o")
 (anova( full_mod, full_mod_int, test = "Chisq"))
 (Anova(full_mod_int, type = "II"))
 ```
+The plot suggests that the effect of GRE writing is not consistent across all three groups of students.  For example, a writing score of 5 showed the greater mean probability of acceptance for American and international students with US Degree. for international student, a writing score of 2 gives the highest chance of acceptance. This suggests there may be a meaningful or significant interaction effect, but we will need to do a statistical test to confirm this hypothesis.
 
 #Test for the inclusion of a Categorical Variable
 **H~0~:** full_mod = full_mod
