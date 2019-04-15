@@ -104,6 +104,10 @@ gg <- grad %>%
  mutate(pred = predict(gradmodel,
  type = "response")) #%>% select(decision, pred)
 ```
+#Distribution of the Respond
+In model without internation distribution, the mean of 
+In model with interation, 
+
 
 ```{r}
 # check assumptions
