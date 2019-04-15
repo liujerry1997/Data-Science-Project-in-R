@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+install.packages("carData")  # Delete this line after install 
+library(car)
+
+(anova( full_mod, full_mod_int, test = "Chisq"))
+
+(Anova(full_mod_int, type = "II"))
+
+```
+
+#Correlation matrix
+```{r}
+library(Hmisc)
+grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+
+(grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
+
+(my_data1 <- grad_noNA[, c(8,11,17)])
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+
+
+
+#This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
+(rcorr(as.matrix(my_data1)))
+
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+(rcorr(as.matrix(my_data2)))
+```
+
+#Test for the inclusion of a Categorical Variable
+#H0: full_mod = full_mod
+#Ha: full_mod = full_mod_int
+# Significant Level: 0.05
+
+Pr(>Chi) for two models is 0.1581, which is bigger than siginificant level 0.05. Therefore, two models are not significantly different.
+
+Pr(>Chi) for ugrad_gpa, GRE_Total, gre_writing and status are all smaller than siginificant level 0.05, while all the interaction effect is not signficant. Therefore, the anova table indicates that the main effect are significant, and interaction effect is not significant.
