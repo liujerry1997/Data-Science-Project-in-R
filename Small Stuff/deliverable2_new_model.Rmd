@@ -312,31 +312,31 @@ grad_mod <- (grad_mod %>%
   mutate(logit = log(p/(1-p))) %>%
   gather(key = "predictors", value = "value", -logit))
 
->>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
+
 # check linearity between x and logit of the outcome
 ggplot(grad_mod, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
   facet_wrap(~predictors, scales = "free_y")
-<<<<<<< HEAD
+#<<<<<<< HEAD
 # check influencial values
 # top3 largest values
 plot(full_mod, which = 4, id.n = 3)
-=======
+#=======
 
 # check influencial values
 # top3 largest values
 plot(full_mod, which = 4, id.n = 3)
 
->>>>>>> 043d3db4f290e089adc5ae6db144b387dabae8ef
+
 # plot the standardized residual
 data <- augment(full_mod) %>% 
   mutate(index = 1:n())
 data %>% top_n(3, .cooksd)
 ggplot(data, aes(index, .std.resid)) + 
   geom_point(aes(color = decision1)) +
-<<<<<<< HEAD
+
   theme_bw()
 # if standardized residual is greater than 3 -> Influential
 data %>% 
@@ -345,9 +345,12 @@ data %>%
 library(Hmisc)
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
-my_data1 <- grad_noNA[, c(8,11,14)]
+my_data1 <- grad_noNA[, c(8,11,17)]
 my_data2 <- grad_noNA[, c(8,9,10,11)]
-#(rcorr(as.matrix(my_data)))
+
+#This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
+
+#(rcorr(as.matrix(my_data1)))
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
 ```
