@@ -5,9 +5,7 @@ output: html_document
 # Data Importing
 ```{r}
 library(tidyverse)
-library(Hmisc)
 #library(plotly)
-
 (grad <- read_csv("data/grad.csv",
     col_types = cols_only( 
       uni_name=col_character(),
@@ -29,10 +27,9 @@ problems(grad)
 
 # Data Cleaning
 ```{r}
-grad <- grad %>% filter(str_detect(major, "Computer"))
-                        
-                        #|str_detect(major, "computer"),degree=="PhD") %>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
+grad <- grad %>% filter(str_detect(major, "Computer")|str_detect(major, "computer"))
 
+#,degree=="PhD") %>% mutate(research=(str_detect(comments, "research")|str_detect(comments, "Research"))&!str_detect(comments, "No research")&!str_detect(comments, "no research")&!is.na(comments))
 grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 grad %>% group_by(uni_name,major) %>% count(uni_name, major) %>% arrange(desc(n))
 ```
@@ -43,19 +40,15 @@ grad1 <- grad %>% group_by(uni_name) %>%filter(decision == "Accepted") %>% count
 grad2 <- grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 colnames(grad1)[2] = "accepted"
 (top10 <-merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(n>100) %>% arrange(desc(n)) %>% head(10))
-
 grad3 <- grad %>% group_by(uni_name,major) %>% filter(decision == "Accepted") %>% count(uni_name,major) %>% arrange(desc(n)) 
 grad4 <- grad %>% group_by(uni_name,major) %>% count(uni_name,major) %>% arrange(desc(n))
 colnames(grad3)[3] = "accepted"
 merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% arrange(desc(n)) %>% head(10)
-
 merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)")
 merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)") %>% arrange(rate) %>% head(10)
-
 #filter for top 10 schools by ranking
 top10 <- head(top10,10)$uni_name 
 grad <- subset(grad, uni_name %in% top10)
-
 #filter
 grad <- grad[complete.cases(grad), ]
 ```
@@ -63,17 +56,13 @@ grad <- grad[complete.cases(grad), ]
 # Modeling
 ```{r}
 grad <- grad[complete.cases(grad[,-14]), ] %>% filter(is_new_gre == TRUE, ugrad_gpa <=4,status!="Other")%>% mutate(season1 = str_sub(season,1,1), decision1 = (decision=="Accepted"), GRE_Total = gre_verbal + gre_quant)
-
 # models
-full_mod_int <- glm(decision1 ~ (ugrad_gpa+GRE_Total+gre_writing)*status-1, data = grad, family = binomial)
+full_mod_int <- glm(decision1 ~ (ugrad_gpa+GRE_Total+gre_writing)*status -1, data = grad, family = binomial)
 (gradmodel_int <- step(full_mod_int))
 summary(gradmodel_int)
-
 full_mod <- glm(decision1 ~ ugrad_gpa+GRE_Total+gre_writing+status-1, data = grad, family = binomial)
 (gradmodel <- step(full_mod))
 summary(gradmodel)
-
-
 null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
 
 grad %>%
@@ -84,7 +73,6 @@ grad %>%
  geom_point(aes(color = status),
  position = "jitter") +
  labs(title = "model with interaction")
-
 grad %>%
  mutate(pred = predict(gradmodel,
  type = "response")) %>%
@@ -97,11 +85,53 @@ grad %>%
 gg_int <- grad %>%
  mutate(pred = predict(gradmodel_int,
  type = "response")) #%>% select(decision, pred)
-
 gg <- grad %>%
  mutate(pred = predict(gradmodel,
  type = "response")) #%>% select(decision, pred)
+
+
 ```
+
+For the model that includes interaction:
+The regression coefficient for ugrad_gpa is $\hat{\beta_(ugradgpa)} = 1.146643$ meaning that for a one-unit increase in undergraduate gpa the logit-transformed probability of getting accepted to the program will increase by 1.15. Predictor GRE_Total has a coefficient $\hat{\beta_(GREtotal)} = 0.031106$, showing that for a one-unit increase in GRE total scores the log odds will increase by 0.03. We also include categorical variable status represneting applicant's identity. The corresponding coefficient $\hat{\beta_(American)} = -13.403241$ shows that if the applicant is an American students, the log odds will decrease by 13.4, holding all other independent variables constant, $\hat{\beta_(International)} = -12.782405$ shows the change in log odds given the student is an international student, and $\hat{\beta_(USdegree)} = -15.544697$ shows the change in log odds given the student is an international student with a US degree.
+
+$\hat{\beta_(GREwriting)} = -0.267686$ is the regression coefficients for GRE writing score, and $\hat{\beta_(GREwriting:International)} = -0.252731$ and $\hat{\beta_(GREwriting:USdegree)} = 0.540781$ are the coefficients of GRE writing scores with respect to students status. However, the hypothesis tests for coefficient indicates that those terms would not significantly impact the prediction of our model. 
+
+```{r}
+# prediction of model with interaction term
+(mod_coef <- coef(gradmodel_int))
+
+prediction_american <- mod_coef[1]*mean(grad$ugrad_gpa)+mod_coef[2]*mean(grad$GRE_Total)+mod_coef[3]*mean(grad$gre_writing)+mod_coef[4]
+exp(prediction_american) / (1 + exp(prediction_american))
+
+prediction_inter <- mod_coef[1]*mean(grad$ugrad_gpa)+mod_coef[2]*mean(grad$GRE_Total)+mod_coef[3]*mean(grad$gre_writing)+mod_coef[5]+mod_coef[7]
+exp(prediction_inter) / (1 + exp(prediction_inter))
+
+prediction_inter_us <- mod_coef[1]*mean(grad$ugrad_gpa)+mod_coef[2]*mean(grad$GRE_Total)+mod_coef[3]*mean(grad$gre_writing)+mod_coef[6]+mod_coef[8]
+exp(prediction_inter_us) / (1 + exp(prediction_inter_us))
+```
+
+Using our model that includes the interaction between student's status and GRE writing score, we use mean GPA, GRE total score and writing score to compute the probability of a student getting accepted. There's 47.9% chance that the student will be admitted to the program if the student is an American student, and 57% and 15.6% respectively if the student is an international student or international student with a US degree.
+
+For the model that does not include interaction terms:
+The regression coefficient for ugrad_gpa is $\hat{\beta_(ugradgpa)} = 1.168482$, which indicates that for a one-unit increase in undergraduate gpa the logit-transformed probability of getting accepted to the program will increase by 1.15. $\hat{\beta_(GREtotal)} = 0.030744$ is the coefficient for predictor GRE_Total showing that for a one-unit increase in GRE total scores the log odds will increase by 0.03. $\hat{\beta_(GREwriting)} = -0.359779$ shows that GRE writing score is negatively related with probability of getting admited, and for every one unit increase in writing score leads to a 0.36 drop in log odds. 
+If the applicant is an American students, our model predicts a drop equals to $\hat{\beta_(American)} = -12.892745$ in the log odds, holding all other independent variables constant. If the aaplicant is a international student, log odds decreases by $\hat{\beta_(International)} = -13.302409$, and if the student has earned a US degree, log odds drops by $\hat{\beta_(USdegree)} = -12.981663$.
+
+```{r}
+# prediction of model without interaction term
+(mod_coef_n <- coef(gradmodel))
+
+prediction_american_n <- mod_coef_n[1]*mean(grad$ugrad_gpa)+mod_coef_n[2]*mean(grad$GRE_Total)+mod_coef_n[3]*mean(grad$gre_writing)+mod_coef_n[4]
+exp(prediction_american_n) / (1 + exp(prediction_american_n))
+
+prediction_inter_n <- mod_coef_n[1]*mean(grad$ugrad_gpa)+mod_coef_n[2]*mean(grad$GRE_Total)+mod_coef_n[3]*mean(grad$gre_writing)+mod_coef_n[5]
+exp(prediction_inter_n) / (1 + exp(prediction_inter_n))
+
+prediction_inter_us_n <- mod_coef_n[1]*mean(grad$ugrad_gpa)+mod_coef_n[2]*mean(grad$GRE_Total)+mod_coef_n[3]*mean(grad$gre_writing)+mod_coef_n[6]
+exp(prediction_inter_us_n) / (1 + exp(prediction_inter_us_n))
+```
+
+Using same mean level GPA, GRE total score and writing score, our simple logistic model predicts that the probability of an American student getting accepted to the program is 49.1% and the probaility for international student without a US degree and those with a US degree is 39% and 46.9% respectively.
 
 ```{r}
 # check assumptions
@@ -109,28 +139,23 @@ gg <- grad %>%
 # 2. linear relationship between the logit of the outcome and each predictor variables
 # 3. no influential values
 # 4. no high intercorrelations
-
 library(broom)
 p_int <- predict(full_mod_int, type = "response")
 grad_mod_int <- grad %>%
   select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
 predictors_int <- colnames(grad_mod_int) 
-
 grad_mod_int <- (grad_mod_int %>%
   mutate(logit = log(p_int/(1-p_int))) %>%
   gather(key = "predictors_int", value = "value", -logit))
-
 # check linearity between x and logit of the outcome
 ggplot(grad_mod_int, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
   facet_wrap(~predictors_int, scales = "free_y")
-
 # check influencial values
 # top3 largest values
 plot(full_mod_int, which = 4, id.n = 3)
-
 # plot the standardized residual
 data_int <- augment(full_mod_int) %>% 
   mutate(index = 1:n())
@@ -141,18 +166,13 @@ ggplot(data_int, aes(index, .std.resid)) +
 # if standardized residual is greater than 3 -> Influential
 data_int %>% 
   filter(abs(.std.resid) > 3)
-
 #Correlation matrix
+library(Hmisc)
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
-
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
-
 my_data1 <- grad_noNA[, c(8,11,14)]
 my_data2 <- grad_noNA[, c(8,9,10,11)]
-
-
 #(rcorr(as.matrix(my_data)))
-
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
 ```
@@ -162,22 +182,18 @@ p <- predict(full_mod, type = "response")
 grad_mod <- grad %>%
   select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
 predictors <- colnames(grad_mod) 
-
 grad_mod <- (grad_mod %>%
   mutate(logit = log(p/(1-p))) %>%
   gather(key = "predictors", value = "value", -logit))
-
 # check linearity between x and logit of the outcome
 ggplot(grad_mod, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
   facet_wrap(~predictors, scales = "free_y")
-
 # check influencial values
 # top3 largest values
 plot(full_mod, which = 4, id.n = 3)
-
 # plot the standardized residual
 data <- augment(full_mod) %>% 
   mutate(index = 1:n())
@@ -188,19 +204,13 @@ ggplot(data, aes(index, .std.resid)) +
 # if standardized residual is greater than 3 -> Influential
 data %>% 
   filter(abs(.std.resid) > 3)
-
 #Correlation matrix
+library(Hmisc)
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
-
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
-
 my_data1 <- grad_noNA[, c(8,11,14)]
 my_data2 <- grad_noNA[, c(8,9,10,11)]
-
-
 #(rcorr(as.matrix(my_data)))
-
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
 ```
-
