@@ -279,7 +279,8 @@ From the plot above the relationship between GPA and GRE seems to be positively 
 Lastly, to measure the correlation across all continuous variables, we create a scatterplot matrix, and correlation matrix.
 
 ```{r}
-g <- grad[complete.cases(,-14),] %>% mutate(acceptance = decision == "Accepted") %>% filter(ugrad_gpa<=4,is_new_gre == TRUE) %>% mutate(gre_total=gre_verbal+gre_quant) %>% select(ugrad_gpa, gre_verbal,gre_quant,gre_writing,gre_total,acceptance) %>% pairs()
+g <- grad[complete.cases(-14),] %>% mutate(acceptance = decision == "Accepted") %>% filter(ugrad_gpa<=4,is_new_gre == TRUE) %>% mutate(gre_total=gre_verbal+gre_quant) %>% select(ugrad_gpa, gre_verbal,gre_quant,gre_writing,gre_total,acceptance) %>% pairs()
+
 ```
 This plot is somewhat unclear due to the verse dense concentration of the datapoints. In the next step, we will likely use regression to model the probability of acceptance based on the different covariates.
 
@@ -293,17 +294,17 @@ While this is a very interesting and robust dataset to analyze, there are also s
  
  
 ```{r}
-<<<<<<< HEAD
+#<<<<<<< HEAD
 grad <- grad[complete.cases(grad[,-14]), ] %>% filter(is_new_gre == TRUE, ugrad_gpa <=4,status!="Other")%>% mutate(season1 = str_sub(season,1,1), decision1 = (decision=="Accepted"))
 full_mod <- glm(decision1 ~ (ugrad_gpa+gre_verbal+gre_quant+research)*status-1, data = grad, family = binomial)
 (gradmodel <- step(full_mod))
 summary(gradmodel)
-=======
+#=======
 grad <- grad %>% filter(is_new_gre == TRUE & !is.na(gre_quant|gre_verbal|ugrad_gpa) & ugrad_gpa <= 4)  %>% mutate(decision1 = (decision=="Accepted"))
 
 full_mod <- glm(decision1 ~ ugrad_gpa+gre_verbal+gre_quant+status, data = grad, family = binomial)
 null_mod <- glm(decision1 ~ 1,data = grad, family=binomial)
->>>>>>> 4274fcf7a6c980ea96eb760e261f2a4494c13a18
+#>>>>>>> 4274fcf7a6c980ea96eb760e261f2a4494c13a18
 
 grad %>%
  mutate(pred = predict(gradmodel,
@@ -366,7 +367,32 @@ data %>%
 ```
 
 ```{r}
+#Correlation matrix
+library(Hmisc)
+
+grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+
+grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant)
+
+my_data1 <- grad_noNA[, c(8,11,14)]
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+
+
+#(rcorr(as.matrix(my_data)))
+
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+(rcorr(as.matrix(my_data2)))
 
 ```
+```{r}
+#Test for the inclusion of a Categorical Variable
+#H0: Model 1 = Model 2
+#Ha: Model 1 != Model 2
 
+Model1
+Model2
+anova( ,  ,  test = "Chisq")
+
+
+```
 
