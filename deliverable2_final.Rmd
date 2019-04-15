@@ -1,6 +1,6 @@
 ---
 title: "deliverable2_final"
-output: html_document
+output: pdf_document
 ---
 # Data Importing
 ```{r}
