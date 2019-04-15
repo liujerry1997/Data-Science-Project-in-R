@@ -180,7 +180,7 @@ Last but not least, since the variables are intercorrlated, we take this into co
 
 
 ```{r}
-p <- predict(full_mod, type = "response")
+p <- predict(full_mod, type = "response")  
 grad_mod <- grad %>%
   select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
 predictors <- colnames(grad_mod) 
