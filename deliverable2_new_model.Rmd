@@ -1,6 +1,6 @@
 ---
 title: "deliverable#2"
-output: html_document
+output: github_document
 ---
 # Data Importing
 ```{r}
