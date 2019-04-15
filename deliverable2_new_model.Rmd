@@ -69,6 +69,7 @@ grad <- grad[complete.cases(grad[,-14]), ] %>% filter(is_new_gre == TRUE, ugrad_
 full_mod_int <- glm(decision1 ~ (ugrad_gpa+GRE_Total+gre_writing)*status-1, data = grad, family = binomial)
 (gradmodel_int <- step(full_mod_int))
 summary(gradmodel_int)
+summary(full_mod_int)
 
 full_mod <- glm(decision1 ~ ugrad_gpa+GRE_Total+gre_writing+status-1, data = grad, family = binomial)
 (gradmodel <- step(full_mod))
@@ -126,7 +127,7 @@ ggplot(grad_mod_int, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
-  facet_wrap(~predictors_int, scales = "free_y")
+  facet_wrap(~predictors_int, scales = "free_y")+labs(title = 'The Linearity of Independent Variables' )
 
 
 
@@ -150,23 +151,26 @@ car::vif(full_mod_int)
 
 #Correlation matrix
 library(Hmisc)
-grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
 
-(grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
-
-my_data1 <- grad_noNA[, c(8,11,14)]
-my_data2 <- grad_noNA[, c(8,9,10,11)]
+my_data1 <- grad[, c(8,11,17)]
+my_data2 <- grad[, c(8,9,10,11)]
 
 
-#(rcorr(as.matrix(my_data1))) This is for ugrad_gpa, gre_total gre_writing
+(rcorr(as.matrix(my_data1))) 
+#This is for ugrad_gpa, gre_total gre_writing
 
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
-(rcorr(as.matrix(my_data2)))
+#(rcorr(as.matrix(my_data2)))
 ```
 
 ##Assumption 
-First, since we set the accepted decisition
-First, binary logistic regression requires the dependent variable to be binary and ordinal logistic regression requires the dependent variable to be ordinal.
+First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
+
+Second, logistic regression also assumes the linearity of independent variables.As shown in "The linearity of independent variables", the logit of GRE is quite linear to the accepted probability in logit scale. Even though there exists an U-shaped trend at the end of the parabala, the majority of gpa points associated linearly to the logit outcome of undergraduate gpa. However, the scatter plots of gre_writing shows non_linearity, similar to a cubic term.
+
+Third, some outliers may be influential enough to alter the quality of the logistic regression model. Therefore, we calculated the Cook's distance for each points; the higher the leverage and residuals of that point, the higher its Cook’s distance. As demonstrated in Cook's distance graph, there exist couple of spikes in the graph. To further investigate this issue, the deviance residuals plots has ben constructed. Since it does not have any observations whose cook's value is large than 3, we conclude that the dataset does not have any influential outliers. 
+
+Last but not least, since the variables are intercorrlated, we take this into consideration and use interation terms to overcome this issue.
 
 
 
@@ -202,8 +206,6 @@ ggplot(data, aes(index, .std.resid)) +
 data %>% 
   filter(abs(.std.resid) > 3)
 
-#Multicollinearity
-car::vif(full_mod)
 
 #Correlation matrix
 library(Hmisc)
@@ -215,11 +217,20 @@ grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE
 my_data2 <- grad_noNA[, c(8,9,10,11)]
 
 #This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
-#(rcorr(as.matrix(my_data1)))
+(rcorr(as.matrix(my_data1)))
 
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
 ```
+##Assumption_w/o interation
+First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
+
+Second, logistic regression also assumes the linearity of independent variables.As shown in "The linearity of independent variables", the logit of GRE and undergraduate gpa are fairly linear to the accepted probability in logit scale. However, the scatter plots of gre_writing fits a parabola, instead of a linear line.
+
+Third, some outliers may be influential enough to alter the quality of the logistic regression model. Therefore, we calculated the Cook's distance for each points; the higher the leverage and residuals of that point, the higher its Cook’s distance. As demonstrated in Cook's distance graph, there exist couple of spikes in the graph. To further investigate this issue, the deviance residuals plots has ben constructed. Since it does not have any observations whose cook's value is large than 3, we conclude that the dataset does not have any influential outliers. 
+
+Last but not least, from the covariance matrix, we can tell that each term are corrlated with each other since its p value is near 0. Therefore, we incorporate interation terms in our further model to overcome this disadvantage.
+
 
 ```{r}
 #Test for the inclusion of a Categorical Variable
