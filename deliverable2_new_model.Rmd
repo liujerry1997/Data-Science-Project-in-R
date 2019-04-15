@@ -105,8 +105,9 @@ gg <- grad %>%
  type = "response")) #%>% select(decision, pred)
 ```
 #Distribution of the Respond
-In model without internation distribution, the mean of 
-In model with interation, 
+In model without internation distribution, the mean of predicted probabilities of rejected students is around 0.41, while the mean of predicted probabilities of accepted students is around 0.43, which is slightly higher than the mean of predicted probabilities of rejected students. Since their interval are overlapped, it means that the prediction may not be significant enough to explain the success of a student being accepted. In addition, the plots are fairly scattered, meaning that there does no exist a certain pattern to explain the trend.
+
+In model with interation, the mean of predicted probabilities of rejected students is around 0.4, while the mean of predicted probabilities of accepted students is around 0.45, which is slightly higher than the mean of predicted probabilities of rejected students. Since their interval are overlapped, it means that the prediction may not be significant enough to explain the success of a student being accepted. However, the plots are more densely concentrated than the one without interation.
 
 
 ```{r}
