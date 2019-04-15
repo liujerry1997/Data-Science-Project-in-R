@@ -240,6 +240,17 @@ Last but not least, from the covariance matrix, we can tell that each term are c
 
 
 ```{r}
+interaction.plot(x.factor     = gg_int$status,
+                 trace.factor = gg_int$gre_writing, 
+                 response     = gg_int$pred, 
+                 fun = mean,
+                 type="b",
+                 col=c("black","red","green"),  ### Colors for levels of trace var.
+                 pch=c(19, 17, 15),             ### Symbols for levels of trace var.
+                 fixed=TRUE,                    ### Order by factor order in data
+                 leg.bty = "o")
+
+
 (anova( full_mod, full_mod_int, test = "Chisq"))
 (Anova(full_mod_int, type = "II"))
 ```
