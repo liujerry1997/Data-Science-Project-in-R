@@ -88,8 +88,6 @@ gg_int <- grad %>%
 gg <- grad %>%
  mutate(pred = predict(gradmodel,
  type = "response")) #%>% select(decision, pred)
-
-
 ```
 
 For the model that includes interaction:
