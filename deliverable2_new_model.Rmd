@@ -233,14 +233,20 @@ Last but not least, from the covariance matrix, we can tell that each term are c
 
 
 ```{r}
+install.packages("carData")  # Delete this line after install 
+library(car)
+
+(anova( full_mod, full_mod_int, test = "Chisq"))
+
+(Anova(full_mod_int, type = "II"))
+
+```
+
 #Test for the inclusion of a Categorical Variable
 #H0: full_mod = full_mod
 #Ha: full_mod = full_mod_int
-
 # Significant Level: 0.05
 
-anova( full_mod, full_mod_int, test = "Chisq")
+Pr(>Chi) for two models is 0.1581, which is bigger than siginificant level 0.05. Therefore, two models are not significantly different.
 
-# Pr(>Chi) is 0.1581, which is less than siginificant level 0.05
-
-```
+# Pr(>Chi) for ugrad_gpa, GRE_Total, gre_writing and status are all smaller than siginificant level 0.05. While all the interaction effect is not signficant. Therefore, the anova table indicates that the main effect are significant.
