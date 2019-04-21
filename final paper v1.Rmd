@@ -122,6 +122,10 @@ Next we assess the selectivity of different grad schools and programs.
 grad1 <- grad %>% group_by(uni_name) %>%filter(decision == "Accepted") %>% count(uni_name) %>% arrange(desc(n)) 
 grad2 <- grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
 colnames(grad1)[2] = "accepted"
+
+######
+(top10 <-merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(n>100) %>% arrange(desc(n)) %>% head(10))
+
 merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% arrange(rate) %>% head(10)
 grad3 <- grad %>% group_by(uni_name,major) %>% filter(decision == "Accepted") %>% count(uni_name,major) %>% arrange(desc(n)) 
 grad4 <- grad %>% group_by(uni_name,major) %>% count(uni_name,major) %>% arrange(desc(n))
@@ -129,6 +133,15 @@ colnames(grad3)[3] = "accepted"
 merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% arrange(rate) %>% head(10)
 merge(grad1,grad2,by =("uni_name")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)")
 merge(grad3,grad4,by=c("uni_name","major")) %>% mutate(rate = accepted/n) %>% filter(uni_name == "Boston University (BU)") %>% arrange(rate) %>% head(10)
+
+
+
+######
+#filter for top 10 schools by ranking
+top10 <- head(top10,10)$uni_name 
+grad <- subset(grad, uni_name %in% top10)
+#filter
+grad <- grad[complete.cases(grad), ]
 ```
 
 Surprisingly, the most selective grad school and grad program are Virginia Consortium with an acceptance rate of 6.25% and University of Colorado, Boulder, Clinical Psychology with an acceptance rate of 1.89% respectively. We also observe that the BU as a whole is not too selective with an acceptance rate of 42.8%. We also obeserve that the most selective major at BU is genetic counseling with only 1 student accepted out of 20 (5%).
@@ -148,86 +161,57 @@ grad_year$decision_date <- NULL
 grad_year %>% group_by(yr, degree) %>% ggplot(aes(x = as.factor(yr), fill = degree)) + geom_bar(position = "dodge")+ 
 labs(x ="Year",
      y ="Count",
-     title="Number of Application for each Degree Type by Year")
+     title="Number of Application for Degree Type by Year")
 ```
 
-The dataset has official data of report from 2006 to 2015. The application report of three degrees, MFA, MS, PhD increase each year until 2015. The overall shape has a plateauing trend.
+The dataset has official data of report from 2010 to 2015. The application report of two degrees, MS and PhD increase each year until 2015. The overall shape has a positive trend.
 
-Next, we look at the distribution of applications by season and the counts of each admission decision.
-```{r,echo=FALSE}
-# bar chart for season
-# bar chart includes both Spring semester and Fall semester
-grad %>% 
-  filter(!is.na(season)) %>%
-  ggplot() +
-  geom_bar(aes(x = season)) +
-  labs(title = "Admission Season")
-# bar chart for Fall semester only
-grad %>%
-  filter(!is.na(season)) %>%
-  group_by(fall = str_match(season, "^\\F..")) %>%
-  filter(!is.na(fall)) %>%
-  ggplot() +
-  geom_bar(aes(x = season)) +
-  labs(title = "Admission Season (Fall)")
-# bar chart for Spring semester only
-grad %>%
-  filter(!is.na(season)) %>%
-  group_by(fall = str_match(season, "^\\F..")) %>%
-  filter(is.na(fall)) %>%
-  ggplot() +
-  geom_bar(aes(x = season)) +
-  labs(title = "Admission Season (Spring)")
-# bar chart for decision
-grad %>%
-  filter(!is.na(decision)) %>%
-  ggplot() +
-  geom_bar(aes(x = decision)) +
-  labs(title = "Admission Decision")
-```
 
-We see that the total number of application are signicantly higher for the fall semester than the Spring semester. Focusing only on fall semesters, graduate school enrollment clearly has shown a positive trend over the years. Spring enrollment does not show an explicit pattern. When looking at the distribution of decisions, the majority of candidates either recieve of report mainly acceptances and rejections, while a few candiates recieve other forms of responses such as waitlist, interview, or "other."
-
-Next, we plot the distribution of GRE test scores, and GPA. Because these is a variable "is_new_gre", which distinguished between old and new GRE, we filter for only new GRE scores, as the majority of observations report new GRE scores.
+Next, we plot the distribution of GRE test scores, and GPA. Because there is a variable "is_new_gre", which distinguished between old and new GRE, we filter for only new GRE scores, as the majority of observations report new GRE scores.
 ```{r,echo=FALSE}
 # GRE Verbal
-grad %>% select(gre_verbal ,is_new_gre) %>% 
+verbal <- grad %>% select(gre_verbal ,is_new_gre) %>% 
 filter(is_new_gre == TRUE & is.na(gre_verbal)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_verbal)) + 
 labs(x ="GRE Verbal Score",
      y ="Count",
-     title="Frequencies of GRE Verbal Scores")
+     title="Frequency Distribution of GRE Verbal Scores")
 # GRE quant
-grad %>% select(gre_quant ,is_new_gre) %>% 
+quant <- grad %>% select(gre_quant ,is_new_gre) %>% 
   filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_quant)) + 
 labs(x ="GRE Quant Score",
      y ="Count",
-     title="Frequencies of GRE Quant Scores")
+     title="Frequency Distribution of GRE Quant Scores")
 # GRE writing
-grad %>% select(gre_writing ,is_new_gre) %>% 
+writing <- grad %>% select(gre_writing ,is_new_gre) %>% 
   filter(is_new_gre == TRUE & is.na(gre_writing)!= TRUE) %>% ggplot + geom_histogram(aes(gre_writing)) + 
 labs(x ="GRE Writing Score",
      y ="Count",
-     title="Frequencies of GRE Writing Scores")
+     title="Frequency Distribution of GRE Writing Scores")
+
+# GPA 
+gpa <- grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
+  ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "Frequency Distribution of GPA")
+
+gridExtra::grid.arrange(verbal, quant, writing, gpa, nrow = 2, ncol = 2)
 ```
 
-We see from the above histograms that GRE verbal scores range from 130 to 170 with a bell shape. Most of them concentrate 155 - 165. GRE quant score range from 130 to 170 with step like shape. Scores tend to concentrate 160 - 170. GRE writing scores range from 2 to 6 with a bell like shape. Most people get a score of 4.
-
-```{r,echo=FALSE}
-grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
-  ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "GPA Distribution")
-```
-
-We see that the distribution of GPAs for the observations tend to be left skewed, with the majority of candidates having more than 3.6 GPA. This is accepted as grad programs tend to look at GPA as a major factor, and students who aim to attend a grad school would likely have higher GPAs.
+We see from the above histograms that GRE verbal scores range from 130 to 170 with a bell shape. Most of them concentrate 155 - 165. GRE quant score range from 130 to 170 with step like shape. Scores tend to concentrate 160 - 170. GRE writing scores range from 2 to 6 with a bell like shape. Most people get a score of 4. We also see that the distribution of GPAs for the observations tend to be left skewed, with the majority of candidates having more than 3.6 GPA. This is accepted as grad programs tend to look at GPA as a major factor, and students who aim to attend a grad school would likely have higher GPAs.
 
 Lastly, we look at the distribution of student status (internation, US, international with US degree, etc)
 ```{r,echo=FALSE}
 grad %>% filter(!is.na(status)) %>% 
   mutate(count = n()) %>% 
   ggplot(aes(x = status)) + geom_bar() + 
-  labs(titles = "Immigration Status") 
+  labs(titles = "Frequency Distribution of Immigration Status") 
+
+grad %>% filter(!is.na(status)) %>% 
+  mutate(count = n()) %>% 
+  ggplot() + stat_count(aes(x = status, y = ..prop.., group = TRUE)) + 
+  labs(titles = "Density of Immigration Status") 
+
 ```
 
-From the chart above, we see that the majority of students applying are American. In Immigration Status, around 60% of applicants are American and the rest of them are international students. We can tell that a big amount of graduate or Ph.D. students are coming from an international background. 
+From the chart above, we see that the majority of students applying are international students. In Immigration Status, around 70% of applicants are international students and the rest of them are American and students with unclear immigration status. We can tell that a big amount of graduate or Ph.D. students are coming from an international background. 
 
 ## Covariation Between Multiple Variables
 One covariation of interest is the influence of student status (internation, US, etc.) vs admission decision. 
@@ -244,19 +228,10 @@ grad %>%
   filter(!is.na(decision), !is.na(status)) %>%
   ggplot() +
   geom_bar(aes(status, fill = decision), position = "dodge") +
-  labs(title = "Admission Decision vs Status")
-# acceptance rate based on student status
-grid$sum = rowSums(grid[, c("Accepted", "Interview", "Other", "Rejected", "Wait listed")])
-grid %>%
-  gather('Accepted', 'Interview', 'Other', 'Rejected', 'Wait listed', 
-         key = "decision", value = "cases") %>%
-  mutate(prop = cases/sum) %>%
-  filter(status != "Other") %>%
-  ggplot(aes(group = decision, status, prop, color = decision)) + 
-  geom_line()
+  labs(title = "Admission Decision vs Immigration Status")
 ```
 
-From the charts above, it seems that US based students tend to have higher acceptance rates than international students, and internation with US degree students. The bar chart shows that, for American students, the number of getting accepted is higher than the number of getting rejected. However, for international students and international students with US degree, the number of acceptance is lower than the number of rejection. To further investigate if international students are treated differently, we calculate the decision rate. For each status category, we divide the total number of each admission decision by total number of students to get the decision rate. From the plot we can tell that the proportion of getting accepted is higher for American students than international students, and the proportion of getting rejected is higher for international students with US degree.
+From the charts above, it seems that US based students tend to have higher acceptance rates than international students, and international students with US degree. The bar chart shows that, for American students and international students with a US degree, the number of getting accepted is higher than the number of getting rejected. However, for international students without a US degree, the number of acceptance is lower than the number of rejection. 
 
 
 Another covariation of interest is the relationship between GPA and GREE scores. For this we summed GRE verbal and GRE quant to get the full GRE score, and created a scatter plot against GPA. We filtered GPA to be less than 4, as GPA of different scales are not comparable.
@@ -557,7 +532,8 @@ Pr(>Chi) for two models is 0.1581, which is bigger than siginificant level 0.05.
 Pr(>Chi) for ugrad_gpa, GRE_Total, gre_writing and status are all smaller than siginificant level 0.05, while all the interaction effect is not signficant. Therefore, the anova table indicates that the main effect are significant, and interaction effect is not significant.
 
 # Discussion
-From this exploratory data analysis, we confirm many of the hypotheses that we had going into this project. For example, we confirmed our hypotheses that more students apply in the fall semester than the spring semester and that the majority of students applying (or reported) are American. We confirmed relationships between variables such as GPA and GRE scores. We learned several things as well. For example, we learned the distribution of GPA is left skewed, and GRE scores have an abnormal distribution, with several "spikes" among certain scores. We were surprised to see that American students tended to have higher rates of acceptance than international students.
+From this exploratory data analysis, we confirm many of the hypotheses that we had going into this project. The number of students applied for advanced degrees has increased over the years. We confirmed relationships between variables such as GPA and GRE scores. We learned several things as well. For example, we learned the distribution of GPA and GRE quant score are left skewed, and GRE verbal and writing scores have a bell like distribution, with several "spikes" among certain scores. We were surprised to see that American students tended to have higher rates of acceptance than international students.
 
 While this is a very interesting and robust dataset to analyze, there are also several problems we encountered. First, the dataset is not very clean, as it is self-reported. For example, the names of Universities and Majors are not always consistent. For example, some students may write "Boston University (BU)" while others write the name of the specific college at BU such as "Boston University - Metropolitan College." We also noticed that scales of scores and GPA are not always consistent. For example, GPA is most often reported on a 4.0 scale, however, some responses included other scales such as 10 point scale. These will all be problems that we have to work around when going into modeling.
+
 From the analysis above, we see that while GPA, GRE Scores, and Student Status have a significant affect on admissions decisions, they alone are not great predictors for admission results. We see from the box plots that while the model had a higher average predicted probability for students that were actually accepted, there is too much variance in the resulted predictions. This result is likely due to the fact that the dataset is missing many variables that may also be important for admission decisions, such as research experience, reccomendations, reputation of undergraduate institution and so on. While it may be possible to extract this information from the 'comments', many observations did not include any comments and many more did not mention these factors in the comments. This leads us to believe that the admissions process is more than just a "numbers game," and likely includes many "intangibles" in order to determine the ultimate admission result of each student.
