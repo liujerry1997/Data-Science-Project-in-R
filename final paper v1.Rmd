@@ -80,6 +80,9 @@ library(tidyverse)
 library(car)
 library(Hmisc)
 library(gridExtra)
+library(lemon) #for table output
+knit_print.data.frame <- lemon_print #for table output
+
 (grad <- read_csv("data/grad.csv",
     col_types = cols_only( 
       uni_name=col_character(),
