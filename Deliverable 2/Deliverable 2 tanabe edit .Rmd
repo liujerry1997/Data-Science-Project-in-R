@@ -56,9 +56,11 @@ In order to model the probability of acceptance, we decide to use a logisitic re
 ```{r,include=FALSE}
 #models
 full_mod_int <- glm(decision1 ~ (ugrad_gpa+GRE_Total+gre_writing)*status-1, data = grad, family = binomial)
-gradmodel_int <- step(full_mod_int)
+(gradmodel_int <- step(full_mod_int))
 full_mod <- glm(decision1 ~ ugrad_gpa+GRE_Total+gre_writing+status-1, data = grad, family = binomial)
 gradmodel <- step(full_mod)
+
+summary(gradmodel_int)
 ```
 We decided to fit a model both with and without interaction to better understand how significant the interaction terms are for prediction. Predictor variables included in the models are GRE total score (GRE verbal + GRE quant), undergraduate GPA, GRE writing score, and student status.
 
