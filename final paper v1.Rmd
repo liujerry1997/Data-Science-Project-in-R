@@ -82,6 +82,7 @@ library(tidyverse)
 library(car)
 library(Hmisc)
 library(gridExtra)
+library(broom)
 (grad <- read_csv("data/grad.csv",
     col_types = cols_only( 
       uni_name=col_character(),
@@ -300,6 +301,7 @@ We decided to fit a logistics model to better understand predictor variables and
 full_mod <- glm(decision1 ~ ugrad_gpa+GRE_Total+gre_writing+status-1, data = grad, family = binomial)
 gradmodel <- step(full_mod)
 ```
+
 ```{r, echo=False}
 summary(gradmodel)
 ```
@@ -424,7 +426,6 @@ Next, to ensure that our models are valid, we check the assumptions of logistic 
 # 2. linear relationship between the logit of the outcome and each predictor variables
 # 3. no influential values
 # 4. no high intercorrelations
-library(broom)
 p_int <- predict(full_mod_int, type = "response")
 grad_mod_int <- grad %>%
   select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
@@ -473,6 +474,13 @@ Last but not least, since the variables are intercorrlated, we take this into co
 #Tests for Significant Interaction
 ```{r,echo=FALSE}
 ### Please add title to this plot
+gg_int <- grad %>%
+ mutate(pred = predict(gradmodel_int,
+ type = "response")) #%>% select(decision, pred)
+gg <- grad %>%
+ mutate(pred = predict(gradmodel,
+ type = "response")) #%>% select(decision, pred)
+
 (wr = gg_int %>% mutate(gre_writing = as.integer(gre_writing)))
 interaction.plot(x.factor     = wr$status,
                  trace.factor = wr$gre_writing, 
@@ -520,14 +528,6 @@ p2 <- grad %>%
       y="") +
       scale_x_discrete(labels = c('Rejected','Accepted')) +
   theme(legend.position="bottom", legend.title = element_blank())
-
-gg_int <- grad %>%
- mutate(pred = predict(gradmodel_int,
- type = "response")) #%>% select(decision, pred)
-gg <- grad %>%
- mutate(pred = predict(gradmodel,
- type = "response")) #%>% select(decision, pred)
-
 
 grid.arrange(p1, p2, ncol = 2)
 
