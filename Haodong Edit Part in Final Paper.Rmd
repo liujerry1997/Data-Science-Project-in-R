@@ -1,0 +1,39 @@
+---
+title: "Haodong Edit Part for Final Paper"
+author: "Haodong Liu"
+date: "4/21/2019"
+output: html_document
+---
+#Combine Deliverable 1&2 Abstarct and intro together
+
+##Abstract
+In this project, we explore graduate admissions data from Grad Cafe. As all group members of Superficial Intelligence have experience with College or graduate school application, we became interested in quantitatively analyzing the graduate admission result. We analyzed the dataset provided by Grad cafe website. Our main goal is to investigate the question of how different variables, such as GRE score and undergraduate GPA, relate to the admission decision. We focus our analysis on graduate applications to US Top 10 computer science programsm and aim to better understand the admission influencing factors by fitting a logistic model to the data. The covariates we use for the model include undergrad GPA, GRE Scores, Student Status, and interaction terms. We used the model to predict the probability of a student getting accepted. The model shows that, for an American student with average grade, the probability of getting is 49%. The probability for an average international student is 39%. For an average international student with a US degree, the probability is 46%. While our model was able to predict to some degree, which students were more likely to be accepted, the predicted probabilities were too variable to be useful for prediction. This is likely due to many variables being missing from the data such as research experience, reccomendations, reputation of undergraduate institution and so on.
+
+
+# Polish the plot for Tests for Significant Interaction
+```{r,echo=FALSE}
+(wr = gg_int %>% mutate(gre_writing = as.integer(gre_writing)))
+interaction.plot(x.factor     = wr$status,
+                 trace.factor = wr$gre_writing, 
+                 response     = wr$pred, 
+                 main = "Interaction Plot for GRE Writing and Student Status",
+                 sub = "fig * Interaction Plot Base on information of top 10 Computer Science programs",
+                 xlab="Student status",
+                 ylab="Predicition of acceptance rate",
+                 trace.label = "Writing Score",
+                 fun = mean,
+                 type="b",
+                 col=c("black","red","green","blue","orange"),  ### Colors for levels of trace var.
+                 pch=c(19),                     ### Symbols for levels of trace var.
+                 fixed=TRUE,                    ### Order by factor order in data
+                 leg.bty = "o") 
+
+
+
+```
+
+#Add more explaination to interaction test result
+
+Pr(>Chi) for two models is 0.1581, which is bigger than siginificant level 0.05. Therefore, two models are not significantly different.
+Pr(>Chi) for ugrad_gpa, GRE_Total, gre_writing and status are all smaller than siginificant level 0.05, while all the interaction effect is not signficant. Therefore, the anova table indicates that the main effect are significant, and interaction effect is not significant.
+Our interpretation of this result is that, since our research focus on the top 10 Computer Science programs, most of the applicants have strong academic backgrounds, regardless of student status. For example, the acceptance rate for Carnegie Mellon University CS Program is ~6.5%. The distribution of applicants' grade are extremly left skewed. That means it is harder to differentiate international students and American students just by looking at their standard grades.
