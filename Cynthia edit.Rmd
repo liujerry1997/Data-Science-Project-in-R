@@ -1,0 +1,88 @@
+---
+title: "Cynthia edit"
+output: html_document
+---
+
+Next, we look at the change in number of application over time.
+
+```{r, fig.cap="\\label{testPlot}This figure shows the overall trend of number of application",echo=FALSE}
+# Decision reported over time (2015, 2016, 2017)?
+grad$decision_date <- grad$decision_date %>% str_replace("\\(", "") %>% str_replace("\\)", "") 
+# Create a dataset for plotting number of application verses year
+grad_year = grad %>% select(degree, decision_date)  %>% 
+  filter(!is.na(decision_date)) %>%
+  mutate(yr = str_match(decision_date, "...\\d$")) %>%
+  filter(degree == "MFA" | degree == "MS" | degree == "PhD") %>%
+  filter(as.integer(yr) < 2016 ) %>% filter(as.integer(yr) > 2005)
+grad_year$decision_date <- NULL
+# plot
+grad_year %>% group_by(yr, degree) %>% ggplot(aes(x = as.factor(yr), fill = degree)) + geom_bar(position = "dodge")+ 
+labs(x ="Year",
+     y ="Count",
+     title="Number of Application for Degree Type by Year")
+```
+
+The dataset has official data of report from 2006 to 2015. The application report of MS increases each year until 2015, while the application for PhD slightly drops in 2014. The overall shape has a positive trend.
+
+
+Next, we plot the distribution of GRE test scores, and GPA. Because there is a variable "is_new_gre", which distinguished between old and new GRE, we filter for only new GRE scores, as the majority of observations report new GRE scores.
+
+```{r, fig.cap="\\label{testPlot}These figures show the distribution of student GRE quant scores, GRE verbal scores, GRE writing scores, and GPA",echo=FALSE}
+# GRE Verbal
+verbal <- grad %>% select(gre_verbal ,is_new_gre) %>% 
+filter(is_new_gre == TRUE & is.na(gre_verbal)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_verbal)) + 
+labs(x ="GRE Verbal Score",
+     y ="Count",
+     title="Frequency Distribution of GRE Verbal Scores")
+# GRE quant
+quant <- grad %>% select(gre_quant ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_quant)) + 
+labs(x ="GRE Quant Score",
+     y ="Count",
+     title="Frequency Distribution of GRE Quant Scores")
+# GRE writing
+writing <- grad %>% select(gre_writing ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_writing)!= TRUE) %>% ggplot + geom_histogram(aes(gre_writing)) + 
+labs(x ="GRE Writing Score",
+     y ="Count",
+     title="Frequency Distribution of GRE Writing Scores")
+
+# GPA 
+gpa <- grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
+  ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(titles = "Frequency Distribution of GPA")
+
+gridExtra::grid.arrange(verbal, quant, writing, gpa, nrow = 2, ncol = 2)
+```
+
+We see from the above histograms that GRE verbal scores range from 130 to 170 with a bell shape. Most of them concentrate 155 - 160. GRE quant score range from 130 to 170 with step like shape. Scores tend to concentrate 160 - 170. GRE writing scores range from 2 to 6 with a bell like shape. Most people get a score of 4. We also see that the distribution of GPAs for the observations tend to be left skewed, with the majority of candidates having more than 3.6 GPA. This is accepted as grad programs tend to look at GPA as a major factor, and students who aim to attend a grad school would likely have higher GPAs.
+
+Lastly, we look at the distribution of student status (internation, US, international with US degree, etc)
+
+```{r,fig.cap="\\label{testPlot}This figure shows the number of students for each immigration status category",echo=FALSE}
+grad %>% filter(!is.na(status)) %>% 
+  mutate(count = n()) %>% 
+  ggplot(aes(x = status)) + geom_bar() + 
+  labs(titles = "Frequency Distribution of Immigration Status") 
+```
+
+From the chart above, we see that the majority of students applying are international students. In Immigration Status, around 70% of applicants are international students and the rest of them are American and students with unclear immigration status. We can tell that a big amount of graduate or Ph.D. students are coming from an international background. 
+
+## Covariation Between Multiple Variables
+One covariation of interest is the influence of student status (internation, US, etc.) vs admission decision. 
+```{r,fig.cap="\\label{testPlot}This figure shows the distribution of admission results with respect to student status",echo=FALSE}
+# student identity vs acceptance rate
+# table for student status vs decision
+(grid <- grad %>%
+  filter(!is.na(status), !is.na(decision)) %>%
+  group_by(status, decision) %>%
+  summarise(count = n()) %>%
+  spread(key = decision, value = count))
+# bar chart 
+grad %>%
+  filter(!is.na(decision), !is.na(status)) %>%
+  ggplot() +
+  geom_bar(aes(status, fill = decision), position = "dodge") +
+  labs(title = "Admission Decision vs Immigration Status")
+```
+
+From the charts above, it seems that US based students tend to have higher acceptance rates than international students, and international students with US degree. The bar chart shows that, for American students, the number of getting accepted is higher than the number of getting rejected. However, for international students and international students with a US degree, the number of acceptance is lower than the number of rejection. 
