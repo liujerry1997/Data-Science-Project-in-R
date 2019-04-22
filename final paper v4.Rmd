@@ -144,7 +144,8 @@ labs(x ="GRE Quant Score",
 writing <- grad %>% select(gre_writing ,is_new_gre) %>% 
   filter(is_new_gre == TRUE & is.na(gre_writing)!= TRUE) %>% ggplot + geom_histogram(aes(gre_writing),bins=30) + 
 labs(x ="GRE Writing Score",
-     y ="Count")
+     y ="Count",
+     caption = "fig ******************")
 # GPA 
 gpa <- grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
   ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(x ="Undergrad GPA",
@@ -323,46 +324,66 @@ Next, to ensure that our models are valid, we check the assumptions of logistic 
 4. No high intercorrelations
 
 ```{r,echo=FALSE}
+
 # 1. outcome is binary
 # 2. linear relationship between the logit of the outcome and each predictor variables
 # 3. no influential values
 # 4. no high intercorrelations
-library(broom)
+
 p_int <- predict(full_mod_int, type = "response")
 grad_mod_int <- grad %>%
-  select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
+select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
+
 predictors_int <- colnames(grad_mod_int) 
 grad_mod_int <- (grad_mod_int %>%
-  mutate(logit = log(p_int/(1-p_int))) %>%
-  gather(key = "predictors_int", value = "value", -logit))
+mutate(logit = log(p_int/(1-p_int))) %>%
+gather(key = "predictors_int", value = "value", -logit))
+
 # check linearity between x and logit of the outcome
+
 ggplot(grad_mod_int, aes(logit, value))+
   geom_point(size = 0.5, alpha = 0.5) +
   geom_smooth(method = "loess") + 
   theme_bw() + 
-  facet_wrap(~predictors_int, scales = "free_y")
+  facet_wrap(~predictors_int, scales = "free_y") +
+  labs(titles = "Linearity of Numerical Variables",
+       caption = "Figure* plots the linearity between the logit of outcome and the value of numerical varibales")
+
 # check influencial values
 # top3 largest values
-plot(full_mod_int, which = 4, id.n = 3)
+
+plot(full_mod_int, which = 4, id.n = 3,
+     sub = "Figure* describes the cook's distance for all observations in the dataset")
+
 # plot the standardized residual
-data_int <- augment(full_mod_int) %>% 
-  mutate(index = 1:n())
+
+data_int <- augment(full_mod_int) %>% mutate(index = 1:n())
+
 data_int %>% top_n(3, .cooksd)
+
 ggplot(data_int, aes(index, .std.resid)) + 
   geom_point(aes(color = decision1)) +
-  theme_bw()
+  theme_bw() +
+  labs(titles = "Standardized Residuals",
+       x = "index",
+       y= "Standard Deviation",
+       caption = "Figure* plots the distance between predicted value and residuals")
+
 # if standardized residual is greater than 3 -> Influential
-data_int %>% 
-  filter(abs(.std.resid) > 3)
+data_int %>% filter(abs(.std.resid) > 3)
+
 #Correlation matrix
-library(Hmisc)
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
+
 my_data1 <- grad_noNA[, c(8,11,14)]
 my_data2 <- grad_noNA[, c(8,9,10,11)]
+
 #(rcorr(as.matrix(my_data)))
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
 (rcorr(as.matrix(my_data2)))
+
 ```
 
 First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
@@ -375,41 +396,86 @@ Last but not least, since the variables are intercorrlated, we take this into co
 
 ##Assumption_w/o interation
 ```{r,echo=FALSE}
+
+library(broom)
+
 p <- predict(full_mod, type = "response")
+
 grad_mod <- grad %>%
+
   select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
+
 predictors <- colnames(grad_mod) 
+
 grad_mod <- (grad_mod %>%
+
   mutate(logit = log(p/(1-p))) %>%
+
   gather(key = "predictors", value = "value", -logit))
+
 # check linearity between x and logit of the outcome
+
 ggplot(grad_mod, aes(logit, value))+
+
   geom_point(size = 0.5, alpha = 0.5) +
+
   geom_smooth(method = "loess") + 
+
   theme_bw() + 
-  facet_wrap(~predictors, scales = "free_y")
+
+  facet_wrap(~predictors, scales = "free_y") +
+  labs(titles = "Linearity of Numerical Variables",
+       caption = "Figure* plots the linearity between the logit of outcome and the value of numerical varibales")
+
 # check influencial values
+
 # top3 largest values
-plot(full_mod, which = 4, id.n = 3)
+
+plot(full_mod, which = 4, id.n = 3,
+     sub = "Figure* describes the cook's distance for all observations in the dataset")
+
 # plot the standardized residual
+
 data <- augment(full_mod) %>% 
+
   mutate(index = 1:n())
+
 data %>% top_n(3, .cooksd)
+
 ggplot(data, aes(index, .std.resid)) + 
+
   geom_point(aes(color = decision1)) +
-  theme_bw()
+
+  theme_bw() +
+  labs(titles = "Standardized Residuals",
+       x = "index",
+       y= "Standard Deviation",
+       caption = "Figure* plots the distance between predicted value and residuals")
+
 # if standardized residual is greater than 3 -> Influential
+
 data %>% 
+
   filter(abs(.std.resid) > 3)
+
 # correlation covariance matrix
+
 grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+
 (grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant))
-#(my_data1 <- grad_noNA[, c(8,11,17)])
-#my_data2 <- grad_noNA[, c(8,9,10,11)]
+
+(my_data1 <- grad_noNA[, c(8,11,15)])
+
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+
 #This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
-#(rcorr(as.matrix(my_data1)))
+
+(rcorr(as.matrix(my_data1)))
+
 #This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
-#(rcorr(as.matrix(my_data2)))
+
+(rcorr(as.matrix(my_data2)))
+
 ```
 First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
 
