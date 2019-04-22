@@ -4,7 +4,7 @@ author: "Superficial Intelligence (Nicholas Tanabe, Haodong Liu, Huiwen He, Xiao
 output: pdf_document
 ---
 #Abstract
-In this paper, we use data science to analyze graduate admissions data from Grad Cafe. We aim to better understand what factors are most important for graduate admissions and focus our analysis on the top 10 graduate computer science programs. We fit a logistic model with undergraduate GPA, GRE score, and student status as covariates. The model was not very accurate in prediction, with a McFadden R^2 of .000. This likely means that there are other factors that were not represented in the data such as research experience or recommendations are more important to admission decisions that GPA and GRE scores alone. 
+In this project, we explore graduate admissions data from Grad Cafe. As all group members of Superficial Intelligence have experience with College or graduate school application, we became interested in quantitatively analyzing the graduate admission result. We analyzed the dataset provided by Grad cafe website. Our main goal is to investigate the question of how different variables, such as GRE score and undergraduate GPA, relate to the admission decision. We focus our analysis on graduate applications to US Top 10 computer science programsm and aim to better understand the admission influencing factors by fitting a logistic model to the data. The covariates we use for the model include undergrad GPA, GRE Scores, Student Status, and interaction terms. We used the model to predict the probability of a student getting accepted. The model shows that, for an American student with average grade, the probability of getting is 49%. The probability for an average international student is 39%. For an average international student with a US degree, the probability is 46%. While our model was able to predict to some degree, which students were more likely to be accepted, the predicted probabilities were too variable to be useful for prediction. This is likely due to many variables being missing from the data such as research experience, reccomendations, reputation of undergraduate institution and so on. 
 
 #Introduction
 Graduate school admission can be a very mysterious and esoteric process. While undergraduates and prospective graduate students constantly stress about whether their GPAs or GRE scores are "good enough" to get into a top graduate program, there are many potential factors that may be important to the final decision in a holistic admission process. In this paper, we aim to use data science to better understand what factors are most important to graduate admissions. Through our research we aim to answer several questions of interest:
@@ -196,7 +196,7 @@ ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = "RED", alpha = 
   labs(titles = "Relationship between GPA and GRE Score",
        y = "GPA",
        x = "GRE Score",
-       caption = "Fig *. displays the mean GPA and the mean GRE scores of each schools in Top 10 CS program accordingly")
+       caption = "Fig* displays the mean GPA and the mean GRE scores of each schools in Top 10 CS program accordingly")
 ```
 
 From Figure 5 above, we can observe that the relationship between GPA and GRE seems to be positively correlated but is not as strong of a relationship as we expected. Most GPAs tend to be on the higher range: people densely fall into the range between 3.5 and 3.75; GRE scores seem to be more variable across application: scores for all applicants concentrate in the range between 300 and 325 with more outliers. 
@@ -425,7 +425,7 @@ interaction.plot(x.factor     = wr$status,
                  trace.factor = wr$gre_writing, 
                  response     = wr$pred, 
                  main = "Interaction Plot for GRE Writing and Student Status",
-                 sub = "fig*  Interaction Plot Base on information of top 10 Computer Science programs",
+                 sub = "fig  Interaction Plot Base on information of top 10 Computer Science programs",
                  xlab="Student status",
                  ylab="Predicition of acceptance rate",
                  trace.label = "Writing Score",
