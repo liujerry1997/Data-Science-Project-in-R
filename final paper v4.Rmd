@@ -108,7 +108,7 @@ First, we look at the top ten graduate programs in Computer Science as ranked by
 
 Next, we look at the change in number of applications over time. The dataset has official data reported from 2006 to 2015. From Figure 1, we see that the number of applications for Master of Science in CS related programs have gradually trended up over the time period, while the number of PhD slightly drops in 2014. An increase in the number of applications with a limited number of open slots for admissions can lower acceptance rates and change standards for graduation. However, we believe that this increase over time can be attributed to an increase in responses on GradCafe.
 
-```{r, fig.cap="\\label{plot1} Overall trend in the number of reported applications per year increasing",fig.width=7, fig.height=3,echo=FALSE}
+```{r, echo=FALSE}
 # Decision reported over time (2015, 2016, 2017)?
 # Create a dataset for plotting number of application verses year
 grad_year = grad %>% select(degree, decision_date)  %>% 
@@ -120,7 +120,8 @@ grad_year$decision_date <- NULL
 grad_year %>% group_by(yr, degree) %>% ggplot(aes(x = as.factor(yr), fill = degree)) + geom_bar(position = "dodge")+ 
 labs(x ="Year",
      y ="Count",
-     title="Number of Reported Applications by Year")
+     title="Number of Reported Applications by Year",
+     caption = "fig 1. Overall trend in the number of reported applications per year increasing")
 ```
 
 
@@ -155,11 +156,12 @@ Next, we plot in Figure 2 the histograms of GRE test scores, broken down between
 
 Lastly, we look at the distribution of student status (international, US, international with US degree, etc)
 
-```{r,fig.cap="\\label{testPlot}This figure shows the number of students for each immigration status category",echo=FALSE}
+```{r,echo=FALSE}
 grad %>% filter(!is.na(status)) %>% 
   mutate(count = n()) %>% 
   ggplot(aes(x = status)) + geom_bar() + 
-  labs(titles = "Frequency Distribution of Immigration Status") 
+  labs(titles = "Frequency Distribution of Immigration Status",
+       caption = "figure 3. This figure shows the number of students for each immigration status category") 
 ```
 
 
@@ -167,7 +169,7 @@ From the chart above, we see that the majority of students applying are internat
 
 One covariation of interest is the influence of student status (international, US, etc.) on graduate admissions. Mainly, we are interested in understanding if International Students are held to a different standard for test scores in the admission process.
 
-```{r,fig.cap="\\label{testPlot}This figure shows the distribution of admission results with respect to student status",echo=FALSE}
+```{r,echo=FALSE}
 # student identity vs acceptance rate
 # table for student status vs decision
 grid <- grad %>%
@@ -181,7 +183,8 @@ grad %>%
   filter(!is.na(decision), !is.na(status)) %>%
   ggplot() +
   geom_bar(aes(status, fill = decision), position = "dodge") +
-  labs(title = "Admission Decision vs Immigration Status")
+  labs(title = "Admission Decision vs Immigration Status",
+       caption = "fig 4. This figure shows the distribution of admission results with respect to student status")
 ```
 
 From Figure 4 above, it seems that US based students tend to have higher acceptance rates than international students, and international students with US degree. 
@@ -192,7 +195,8 @@ grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4 & ugrad_gp
 ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = "RED", alpha = 0.001)) +
   labs(titles = "Relationship between GPA and GRE Score",
        y = "GPA",
-       x = "GRE Score")
+       x = "GRE Score",
+       caption = "Fig *. displays the mean GPA and the mean GRE scores of each schools in Top 10 CS program accordingly")
 ```
 
 From Figure 5 above, we can observe that the relationship between GPA and GRE seems to be positively correlated but is not as strong of a relationship as we expected. Most GPAs tend to be on the higher range: people densely fall into the range between 3.5 and 3.75; GRE scores seem to be more variable across application: scores for all applicants concentrate in the range between 300 and 325 with more outliers. 
@@ -252,6 +256,7 @@ grad %>%
  geom_point(aes(color = status),
  position = "jitter") +
  labs(title = "Model Without Interaction",
+      caption = "fig 6. ",
       x= "Admission Decision",
       y="Predicted Probability of Admission") +
       scale_x_discrete(labels = c('Rejected','Accepted'))
@@ -420,7 +425,7 @@ interaction.plot(x.factor     = wr$status,
                  trace.factor = wr$gre_writing, 
                  response     = wr$pred, 
                  main = "Interaction Plot for GRE Writing and Student Status",
-                 sub = "fig * Interaction Plot Base on information of top 10 Computer Science programs",
+                 sub = "fig*  Interaction Plot Base on information of top 10 Computer Science programs",
                  xlab="Student status",
                  ylab="Predicition of acceptance rate",
                  trace.label = "Writing Score",
@@ -433,7 +438,7 @@ interaction.plot(x.factor     = wr$status,
 (anova( full_mod, full_mod_int, test = "Chisq"))
 (anova(full_mod_int))
 ```
-The plot suggests that the effect of GRE writing is not consistent across all three groups of students.  For example, a writing score of 5 showed the greater mean probability of acceptance for American and international students with US Degree. for international student, a writing score of 2 gives the highest chance of acceptance. This suggests there may be a meaningful or significant interaction effect, but we will need to do a statistical test to confirm this hypothesis. 
+The plot suggests that the effect of GRE writing is not consistent across all three groups of students.  For example, a writing score of 5 showed the greater mean probability of acceptance for American and international students with US Degree. for international student, a writing score of 3 gives the highest chance of acceptance. This suggests there may be a meaningful or significant interaction effect, but we will need to do a statistical test to confirm this hypothesis. 
 
 #Test for the inclusion of a Categorical Variable
 **H~0~:** full_mod = full_mod
