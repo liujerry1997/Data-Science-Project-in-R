@@ -245,6 +245,7 @@ grad %>%
  geom_point(aes(color = status),
  position = "jitter") +
  labs(title = "Model With Interaction",
+      caption = "fig 6. ",
       x = "Admission Decision",
       y="Predicted Probability of Admission") +
       scale_x_discrete(labels = c('Rejected','Accepted'))
@@ -256,7 +257,7 @@ grad %>%
  geom_point(aes(color = status),
  position = "jitter") +
  labs(title = "Model Without Interaction",
-      caption = "fig 6. ",
+      caption = "fig 7. ",
       x= "Admission Decision",
       y="Predicted Probability of Admission") +
       scale_x_discrete(labels = c('Rejected','Accepted'))
