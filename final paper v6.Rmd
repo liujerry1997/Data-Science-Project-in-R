@@ -1,0 +1,500 @@
+---
+title: "Factors Affecting Graduate Admission Decisions for Top Computer Science Programs"
+author: "Superficial Intelligence (Nicholas Tanabe, Haodong Liu, Huiwen He, Xiaoyi Zhang)"
+output: pdf_document
+---
+#Abstract
+In this project, we explore graduate admissions data from GradCafe. As all group members of Superficial Intelligence have experience with college or graduate school applications, we became interested in using data science to quantitatively analyzing the graduate admission process. We analyzed a dataset of graduate admission data collected through GradCafe. Our main goal is to investigate the question of how different variables, such as GRE score and undergraduate GPA, relate to the admission decision. We focus our analysis on graduate applications to US Top 10 computer science programs and aim to better understand the factors influencing admissions by fitting a logistic model to the data. The covariates we use for the model include undergrad GPA, GRE Scores, Student Status, and interaction terms. We used the model to predict the probability of a student getting accepted. The model shows that, for an American student with average grade, the probability of acceptance getting is 49%. The probability for an average international student is 39%. For an average international student with a US degree, the probability is 46%. While our model was able to predict to some degree which students were more likely to be accepted, the predicted probabilities were too variable to be useful for prediction. This is likely due to many variables being missing from the data such as research experience, recommendations, and so on. 
+
+#Introduction
+Graduate school admission can be a very mysterious and esoteric process. While undergraduates and prospective graduate students constantly stress about whether their GPAs or GRE scores are "good enough" to get into a top graduate program, there are many potential factors that may be important to the final decision in a holistic admission process. In this paper, we aim to use data science to better understand what factors are most important to graduate admissions. Through our research we aim to answer several questions of interest:
+
+* "What are the most important factors affecting graduate admissions decisions?"
+
+* "Are international students held to a different standard in graduate admissions?"
+
+* "Can we use data to model probabilities of acceptance?"
+
+As students of data science and prospective graduate students, we will be focusing our analysis on top computer science programs. We start with exploratory data analysis to better understand the distributions and covariations of our variables of interest, and later aim to model admission probabilities for the top 10 graduate computer science programs using logistic regression.
+#The Dataset
+```{r,include=FALSE}
+#load packages, data, and clean dataset
+library(knitr)
+library(tidyverse)
+library(car)
+library(Hmisc)
+library(gridExtra)
+library(knitr)
+library(scales)
+library(broom)
+(grad <- read_csv("data/cs_clean.csv",
+    col_types = cols_only( 
+      uni_name=col_character(),
+      major=col_character(),
+      degree=col_character(),
+      season=col_character(),
+      decision=col_character(),
+      decision_date=col_character(),
+      decision_timestamp=col_double(),
+      ugrad_gpa=col_double(),
+      gre_verbal=col_double(),
+      gre_quant=col_double(),
+      gre_writing=col_double(),
+      is_new_gre=col_logical(),
+      status=col_character())))
+problems(grad)
+```
+For our analysis we will be using data on graduate admissions from GradCafe, a forum that allows students to submit their graduate school admissions decisions and details regarding their scores. A cleaned version of the dataset is provided by Debarghya Das on GitHub. The graduate school admission results database includes admission results and detailed student test scores, self-reported by prospective graduate students on https://www.thegradcafe.com/. The full dataset contains 345,303 observations and 19 variables with a mix of continuous and categorical data, but we will be limiting our analysis to the top 10 US graduate computer science programs, as ranked by US News. The dataset contains the following variables: 
+
+1. **rowid (integer)** - An integer id of the row.
+
+2. **uni_name (character)** - The name of the university.
+
+3. **major(character)** - The subject of the program self-reported by students.
+
+4. **degree (character)** - The type of degree program. The variable takes one of the following values: MS, MA, PhD, MFA, MBA, MEng, and Other.
+
+5. **season (character)** - The season of application. The first letter indicates whether the program starts from the Fall semester or Spring semester, and then the letter is followed by the last 2 digits of the year the program starts. 
+
+6. **decision (character)** - The admission decision. Contains five categories - Accepted, Rejected, Wait-listed, Interview and Other.  
+
+7. **decision_method (character) ** - The method through which decision was communicated.
+8. **decision_date (character)** - The date that the decision was communicated.
+
+9. **decision_timestamp (integer)** - Timestamp of the decision.
+
+10. **ugrad_gpa (double)** - The respondent's undergraduate GPA. The scale of the GPA varies because some students use a 10-point scale while others use a 4-point scale.
+
+11. **gre_verbal (double)** - GRE verbal score, which varies from 130 to 170 for the new GRE and from 200 to 800 for the old GRE.
+
+12. **gre_quant (double)** - GRE quantitative score, which varies from 130 to 170 for the new GRE and from 200 to 800 for the old GRE.
+
+13. **gre_writing (double)** - GRE writing score that ranges from 0 to 6.
+
+14. **is_new_gre (logical)** - Whether or not the applicant took the new GRE.
+
+15. **gre_subject (double)** -  GRE subject test score on a 200 to 990 score scale. 
+
+16. **status (character)** - Status of the candidate. Can be "International", "International with US Degree", "American" or "Other".
+
+17. **post_data (character)** - The date in which the observation was posted on grad cafe.
+
+18. **post_timestamp (integer)** - Timestamp of the post.
+
+19. **comments (character)** - Applicants' comments.
+
+We decided to drop variables which either contain little information such as 'gre_subject', which few candidates reported, and 'rowid' which is redundant, and variables which are not of interest to us, such as 'comments', 'decision_method', 'post_data', and 'post_timestamp'. It is also important to note the limitations of the data. The dataset contains many missing values and may be biased data to self-reporting. In addition to this, there are several other factors that are widely acknowledged as being important in graduate admissions such as research experience, recommendations, and more that are not present in the data. While we tried to scrape the comments variable for relevant keywords such as "research experience," the majority of observations did not include relevant information in the comment field or did not include any comments at all.
+
+#Exploratory Data Analysis
+First, we look at the top ten graduate programs in Computer Science as ranked by US News & World Report, which provides various rankings for US and international colleges. The full ranking can be observed at the following URL: https://www.usnews.com/best-graduate-schools/top-science-schools/computer-science-rankings. From Table 1, we can observe that there may be some bias in the reporting of the data, as the Acceptance Rates seem higher than those typically quoted for these programs. This could possibly mean that applicants that were accepted are more likely to report their results on GradCafe than those that were not. We also observe that acceptance rates for graduate programs seem to be higher than those of undergraduate programs at the same instituation. For example, Stanford University has an undergraduate acceptance rate of 5%, yet the data for graduate programs in CS shows an acceptance rate of 26.5%.
+
+```{r, echo=FALSE}
+#Top 10 Computer Science Programs
+grad1 <- grad %>% group_by(uni_name) %>% filter(decision == "Accepted") %>% count(uni_name) %>% arrange(desc(n))
+grad2 <- grad %>% group_by(uni_name) %>% count(uni_name) %>% arrange(desc(n))
+colnames(grad1)[2] = "accepted"
+colnames(grad2)[2] = "applied"
+topten <- merge(grad1,grad2,by =("uni_name")) %>% mutate(acceptance_rate = percent(accepted/applied)) %>% filter(str_detect(uni_name,"CMU")|str_detect(uni_name,"MIT")|str_detect(uni_name,"Stanford")|str_detect(uni_name,"UCB")|str_detect(uni_name,"UIUC")|str_detect(uni_name,"Cornell University")|str_detect(uni_name,"University Of Washington")|str_detect(uni_name,"GTech")|str_detect(uni_name,"Princeton")|str_detect(uni_name,"UT Austin")) %>% mutate(rank=c(1,6,8,2,9,3,4,5,10,7)) %>% arrange(rank)
+topten <- topten[c(5,1,2,3,4)]
+kable(topten, col.names = c("Rank",
+                           "University Name",
+                           "# Accepted",
+                           "# Applied",
+                           "Acceptance Rate"), caption="Number of Reported Applications and Acceptance Rates for Top 10 Computer Science Programs")
+top10 <- head(topten,10)$uni_name 
+grad <- subset(grad, uni_name %in% top10)
+```
+
+Next, we look at the change in number of applications over time. The dataset has official data reported from 2006 to 2015. From Figure 1, we see that the number of applications for Master of Science in CS related programs have gradually trended up over the time period, while the number of PhD slightly drops in 2014. An increase in the number of applications with a limited number of open slots for admissions can lower acceptance rates and change standards for graduation. However, we believe that this increase over time can be attributed to an increase in responses on GradCafe.
+
+```{r, echo=FALSE}
+# Decision reported over time (2015, 2016, 2017)?
+# Create a dataset for plotting number of application verses year
+grad_year = grad %>% select(degree, decision_date)  %>% 
+  mutate(yr = as.integer(str_c("20", decision_date %>% str_sub(-2,-1)))) %>%
+  filter(degree == "MS" | degree == "PhD") %>%
+  filter(as.integer(yr) < 2016 ) %>% filter(as.integer(yr) > 2005)
+grad_year$decision_date <- NULL
+# plot
+grad_year %>% group_by(yr, degree) %>% ggplot(aes(x = as.factor(yr), fill = degree)) + geom_bar(position = "dodge")+ 
+labs(x ="Year",
+     y ="Count",
+     title="Number of Reported Applications by Year",
+     caption = "Figure 1. Overall trend in the number of reported applications per year increasing")
+```
+
+
+```{r, fig.width=6, fig.height=4,echo=FALSE}
+library(grid)
+#Clean Data
+grad <- grad[complete.cases(grad), ] %>% filter(is_new_gre == TRUE, ugrad_gpa <=4,status!="Other")%>% mutate(decision1 = (decision=="Accepted"), gre_total = gre_verbal + gre_quant)
+grad_ms <- grad %>% filter(degree=="MS")
+grad_phd <- grad %>% filter(degree=="PhD")
+# GRE Verbal
+verbal <- grad %>% select(gre_verbal ,is_new_gre) %>% 
+filter(is_new_gre == TRUE & is.na(gre_verbal)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_verbal),bins=30) +
+labs(x ="GRE Verbal Score",
+     y ="Count")
+# GRE quant
+quant <- grad %>% select(gre_quant ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_quant)!= TRUE ) %>% ggplot + geom_histogram(aes(gre_quant),bins=30) +
+labs(x ="GRE Quant Score",
+     y ="Count")
+# GRE writing
+writing <- grad %>% select(gre_writing ,is_new_gre) %>% 
+  filter(is_new_gre == TRUE & is.na(gre_writing)!= TRUE) %>% ggplot + geom_histogram(aes(gre_writing),bins=30) + 
+labs(x ="GRE Writing Score",
+     y ="Count")
+# GPA 
+gpa <- grad %>% filter(!is.na(ugrad_gpa) & ugrad_gpa < 4.0) %>% 
+  ggplot(aes(ugrad_gpa)) + geom_histogram(bins = 40) + labs(x ="Undergrad GPA",
+                                                            y ="Count")
+grid.arrange(verbal, quant, writing, gpa, nrow = 2, ncol = 2, top="Distributions of GRE Scores and Undergraduate GPA",bottom =textGrob("Figure 2. This figure shows distribution of student GRE quant 
+scores, GRE verbal scores, GRE writing scores, and undergraduate GPA", gp=gpar(fontsize=10)))
+```
+
+Next, we plot in Figure 2 the histograms of GRE test scores, broken down between GRE Verbal and GRE Quant, GRE Writing scores, and undergraduate GPA. In 2011, the GRE exam had a change in format, leading to a new grading scale. The dataset contains a variable "is_new_gre", which distinguishs between old and new GRE scores, so we filter for only new GRE scores, as the majority of observations report new GRE scores. We see from Figure 3 that GRE verbal scores range from 130 to 170 with a bell shape, mostly concentrated between 155 - 160. GRE quant score are left skewed with a range of 130-170, with a large number of students getting a perfect score of 170. GRE writing scores range from 2 to 6 with a bell like shape, with most students getting a score of 4. We also see that the distribution of GPAs for tend to be left skewed, with the majority of candidates having GPAs of more than 3.6. It can clearly be seen that the distributions of these variables are non-normal, which will likely present an issue in modeling.
+
+```{r, fig.width=6, fig.height=3,echo=FALSE}
+grad %>% filter(!is.na(status)) %>% 
+  mutate(count = n()) %>% 
+  ggplot(aes(x = status)) + geom_bar() + 
+  labs(titles = "Frequency Distribution of Immigration Status",
+       caption = "Figure 3. This figure shows the number of students for each immigration status category") 
+```
+
+\newpage
+
+Lastly, we look at the distribution of student status (international, US, international with US degree, etc). From the chart above, we see that the majority of students applying are international students. In Immigration Status, around 70% of applicants are international students and the rest of them are American and students with unclear immigration status. We can tell that a big amount of graduate or Ph.D. students are coming from an international background. 
+
+#Covariations of Interest
+
+Next we explore various covariations of interest in our data. One covariation of interest is the influence of student status (international, US, etc.) on graduate admissions. Mainly, we are interested in understanding if International Students are held to a different standard for test scores in the admission process.
+
+```{r,echo=FALSE}
+# student identity vs acceptance rate
+# table for student status vs decision
+grid <- grad %>%
+  filter(!is.na(status), !is.na(decision)) %>%
+  group_by(status, decision) %>%
+  summarise(count = n()) %>%
+  spread(key = decision, value = count)
+kable(grid)
+# bar chart 
+grad %>%
+  filter(!is.na(decision), !is.na(status)) %>%
+  ggplot() +
+  geom_bar(aes(status, fill = decision), position = "dodge") +
+  labs(title = "Admission Decision vs Immigration Status",
+       caption = "Figure 4. This figure shows the distribution of admission results with respect to student status")
+```
+
+From Figure 4 above, it seems that US based students tend to have higher acceptance rates than international students, and international students with US degree. 
+
+Another covariation of interest is the relationship between GPA and GRE scores. For this we summed GRE verbal and GRE quant to get the full GRE score, and created a scatter plot against GPA. We filtered GPA to be less than 4, as GPA of different scales are not comparable.
+```{r,echo=FALSE}
+grad %>% filter(!is.na(ugrad_gpa|gre_verbal|gre_quant)& ugrad_gpa < 4 & ugrad_gpa >1, is_new_gre == TRUE) %>% mutate(GRE_Total = gre_verbal + gre_quant) %>% group_by(uni_name) %>% mutate(mean_gpa = mean(ugrad_gpa), mean_GRE = mean(GRE_Total)) %>% ungroup() %>%
+ggplot(aes(x = mean_GRE, y = mean_gpa)) + geom_point(aes(color = uni_name, alpha = 0.001)) +
+  labs(titles = "Relationship between GPA and GRE Score",
+       y = "GPA",
+       x = "GRE Score",
+       caption = "Figure 5. mean GPA and GRE for Top 10 CS program")
+```
+
+From Figure 5 above, we can observe that the relationship between GPA and GRE seems to be positively correlated but is not as strong of a relationship as we expected. Most GPAs tend to be on the higher range: people densely fall into the range between 3.5 and 3.75; GRE scores seem to be more variable across application: scores for all applicants concentrate in the range between 300 and 325 with more outliers. 
+
+
+```{r,echo=FALSE}
+#g <- grad[complete.cases(grad),] %>% mutate(acceptance = decision == "Accepted") %>% filter(ugrad_gpa<=4,is_new_gre == TRUE) %>% select(ugrad_gpa, gre_verbal,gre_quant,gre_writing,acceptance) %>% pairs()
+```
+
+#Modeling
+Next, we aim to fit a model to the data in order to better understand which factors are most important to admission decisions. Through our initial exploratory data analysis, we realised that the full dataset may be too large to get a clear picture of how different factors affect admissions decision. Because the full dataset contains a wide variety of schools and graduate programs (which would all have different standards for admission and a variety of interactions), we decided to narrow down the dataset to just the top 10 most popular Computer Science programs. The reason for this is that factors related to admission are likely not comparable accross different schools (e.g. highly selective schools vs high acceptance rate schools) or different programs (e.g. factors that may be important to Computer Science programs would likely differ from a Fine arts program). We chose to focus on top computer science programs as they are of interest to us as students of data science, and prospective graduate students.
+
+In order to model the probability of acceptance, we decide to use a logisitic regression, as the result we want to model is binary (Accepted vs Not Accepted). For our covariates, we hypothesize that GPA, GRE Scores, and student status (American vs International Student) play a significant role in determining the admission decision. In order to select variables, we start with a full model containing all of these variables and use the backwards elimination method of stepwise regression. This method minimizes a model selection criterion called "AIC" to fit a "best" model to the data. With the help of models both with and without interaction, we are able to better understand how significant the interaction terms are for prediction. Predictor variables included in the models are GRE total score (GRE verbal + GRE quant), undergraduate GPA, GRE writing score, and student status.
+
+##Model Without Interactions
+In order to assess the presense of significant interactions, we fit a model both with and without interaction and test whether the models are significantly different. A summary output of the model is provided below.
+
+```{r, include= FALSE}
+full_mod <- glm(decision1 ~ ugrad_gpa+gre_total+gre_writing+status-1, data = grad, family = binomial)
+gradmodel <- step(full_mod)
+```
+
+```{r, echo=FALSE}
+summary(gradmodel)
+```
+
+##Coefficient Interpretation
+
+For the model that does not include interaction terms, the regression coefficient for ugrad_gpa is $\hat{\beta_(ugradgpa)} = 1.168482$, which indicates that for a one-unit increase in undergraduate GPA the logit-transformed probability of getting accepted to the program will increase by 1.15. $\hat{\beta_(GREtotal)} = 0.030744$ is the coefficient for predictor GRE_Total showing that for a one-unit increase in GRE total scores the log odds will increase by 0.03. $\hat{\beta_(GREwriting)} = -0.359779$ shows that GRE writing score is negatively related with the probability of acceptance, and for every one unit increase in writing score leads to a 0.36 drop in log odds. 
+If the applicant is an American students, our model predicts a drop equals to $\hat{\beta_(American)} = -12.892745$ in the log odds, holding all other independent variables constant. If the aaplicant is a international student, log odds decreases by $\hat{\beta_(International)} = -13.302409$, and if the student has earned a US degree, log odds drops by $\hat{\beta_(USdegree)} = -12.981663$.
+
+```{r,echo=FALSE}
+# prediction of model without interaction term
+#mod_coef_n <- coef(gradmodel)
+#prediction_american_n <- mod_coef_n[1]*mean(grad$ugrad_gpa)+mod_coef_n[2]*mean(grad$gre_total)+mod_coef_n[3]*mean(grad$gre_writing)+mod_coef_n[4]
+#exp(prediction_american_n) / (1 + exp(prediction_american_n))
+#prediction_inter_n <- mod_coef_n[1]*mean(grad$ugrad_gpa)+mod_coef_n[2]*mean(grad$gre_total)+mod_coef_n[3]*mean(grad$gre_writing)+mod_coef_n[5]
+#exp(prediction_inter_n) / (1 + exp(prediction_inter_n))
+#prediction_inter_us_n <- mod_coef_n[1]*mean(grad$ugrad_gpa)+mod_coef_n[2]*mean(grad$gre_total)+mod_coef_n[3]*mean(grad$gre_writing)+mod_coef_n[6]
+#exp(prediction_inter_us_n) / (1 + exp(prediction_inter_us_n))
+```
+
+Using same mean level GPA, GRE total score and writing score, our simple logistic model predicts that the probability of an American student getting accepted to the program is 49.1% and the probability for an international student without a US degree and one with a US degree is 39% and 46.9% respectively.
+
+##Model Assumptions
+Next, to ensure that our models are valid, we check the assumptions of logistic regression:
+
+1. Outcome is binary
+
+2. Linear relationship between the logit of the outcome and each predictor variables
+
+3. No influential values
+
+4. No high intercorrelations
+
+First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bound within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
+
+```{r,echo=FALSE}
+library(broom)
+p <- predict(full_mod, type = "response")
+grad_mod <- grad %>%
+  select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
+predictors <- colnames(grad_mod) 
+grad_mod <- (grad_mod %>%
+  mutate(logit = log(p/(1-p))) %>%
+  gather(key = "predictors", value = "value", -logit))
+# check linearity between x and logit of the outcome
+ggplot(grad_mod, aes(logit, value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y") +
+  labs(titles = "Linearity of Numerical Variables",
+       caption = "Figure 6. plots the linearity between the logit of outcome and the value of numerical varibales")
+```
+
+Second, logistic regression also assumes the linearity of independent variables. As shown in Figure 6, "The Linearity of Numerical Variables", the logit of GRE and undergraduate gpa are fairly linear to the accepted probability in logit scale. However, the scatter plots of gre_writing fits a parabola, instead of a linear line, though this is likely due to the presense of a few outliers.
+
+```{r,echo=FALSE}
+# check influencial values
+# top3 largest values
+plot(full_mod, which = 4, id.n = 3,
+     sub = "Figure 7. Describes the cook's distance for all observations in the dataset")
+# plot the standardized residual
+data <- augment(full_mod) %>% 
+  mutate(index = 1:n())
+#data %>% top_n(3, .cooksd)
+ggplot(data, aes(index, .std.resid)) + 
+  geom_point(aes(color = decision1)) +
+  theme_bw() +
+  labs(titles = "Standardized Residuals",
+       x = "Index",
+       y= "Standard Deviation",
+       caption = "Figure 8. plots the distance between predicted value and residuals")
+# if standardized residual is greater than 3 -> Influential
+#data %>% filter(abs(.std.resid) > 3)
+# correlation covariance matrix
+grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant)
+my_data1 <- grad_noNA[, c(8,11,15)]
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+```
+
+Third, some outliers may be influential enough to alter the quality of the logistic regression model. Therefore, we calculated the Cook's distance for each points; the higher the leverage and residuals of that point, the higher its Cook's distance. As demonstrated in Cook's distance graph, there exist couple of spikes in the graph. To further investigate this issue, the deviance residuals plots has been constructed. Since it does not have any observations whose cook's value is large than 3, we conclude that the dataset does not have any influential outliers. 
+
+```{r,echo=FALSE}
+#This is the correlation matrix for ugrad_gpa, gre_total, gre_writing
+(rcorr(as.matrix(my_data1)))
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+(rcorr(as.matrix(my_data2)))
+```
+
+Last but not least, from the covariance matrix, we can tell that each term are corrlated with each other since its p value is near 0. Therefore, we incorporate interaction terms in our further model to overcome this disadvantage.
+
+##Model With Interaction
+However, the variables in model without interactions are correlated with each other and we also suspect that there may be interactions between student status and scores. Therefore, we construct another model that includes interaction between Student Status and other variables. A summary output of the model output is provided below.
+
+```{r,include=FALSE}
+#model with interaction
+full_mod_int <- glm(decision1 ~ (ugrad_gpa+gre_total+gre_writing)*status-1, data = grad, family = binomial)
+gradmodel_int <- step(full_mod_int)
+```
+
+```{r,echo=FALSE}
+summary(gradmodel_int)
+```
+
+One interesting observation we see is that there is an interaction between GRE Writing and Student Status. This could be due to varying standards for writing ability based on Student Status. American students may be held to a higher standard for writing quality than international students, which is to be expected.
+
+##Coefficient Interpretation
+For the model that includes interaction, the regression coefficient for ugrad_gpa is $\hat{\beta_(ugradgpa)} = 1.146643$ meaning that for a one-unit increase in undergraduate GPA the logit-transformed probability of getting accepted to the program will increase by 1.15. Predictor GRE_Total has a coefficient $\hat{\beta_(GREtotal)} = 0.031106$, showing that for a one-unit increase in GRE total scores the log odds will increase by 0.03. We also include categorical variable status representing the applicant's status. The corresponding coefficient $\hat{\beta_(American)} = -13.403241$ shows that if the applicant is an American student, the log odds will decrease by 13.4, holding all other independent variables constant, $\hat{\beta_(International)} = -12.782405$ shows the change in log odds given the student is an international student, and $\hat{\beta_(USdegree)} = -15.544697$ shows the change in log odds given the student is an international student with a US degree.
+
+$\hat{\beta_(GREwriting)} = -0.267686$ is the regression coefficients for GRE writing score, and $\hat{\beta_(GREwriting:International)} = -0.252731$ and for the interaction term $\hat{\beta_(GREwriting:USdegree)} = 0.540781$ are the coefficients of GRE writing scores with respect to students status. However, the hypothesis tests for coefficient indicates that those terms would not significantly impact the prediction of our model. 
+
+```{r,include=FALSE}
+# prediction of model with interaction term
+mod_coef <- coef(gradmodel_int)
+prediction_american <- mod_coef[1]*mean(grad$ugrad_gpa)+mod_coef[2]*mean(grad$gre_total)+mod_coef[3]*mean(grad$gre_writing)+mod_coef[4]
+exp(prediction_american) / (1 + exp(prediction_american))
+prediction_inter <- mod_coef[1]*mean(grad$ugrad_gpa)+mod_coef[2]*mean(grad$gre_total)+mod_coef[3]*mean(grad$gre_writing)+mod_coef[5]+mod_coef[7]
+exp(prediction_inter) / (1 + exp(prediction_inter))
+prediction_inter_us <- mod_coef[1]*mean(grad$ugrad_gpa)+mod_coef[2]*mean(grad$gre_total)+mod_coef[3]*mean(grad$gre_writing)+mod_coef[6]+mod_coef[8]
+exp(prediction_inter_us) / (1 + exp(prediction_inter_us))
+```
+
+We next check the prediction for the probability of a student getting accepted at mean level GPA, GRE total score, and writing score. According to our model that includes interaction, there's a 47.9% chance that the student will be admitted to the program if the student is an American student, and 57% and 15.6% respectively if the student is an international student or an international student with a US degree.
+
+
+##Model Assumptions
+To ensure the validity of this model, we follow the same methodology in assumptions in model without interaction. First, since we set the accepted decision as dependent variables and the decision is binary, either 1, accepted or 0, rejected. Therefore, the predicted probability is bind within the interval between 0 and 1. It meets the first assumption of dependent variable to be binary. 
+
+```{r,echo=FALSE}
+# 1. outcome is binary
+# 2. linear relationship between the logit of the outcome and each predictor variables
+# 3. no influential values
+# 4. no high intercorrelations
+p_int <- predict(full_mod_int, type = "response")
+grad_mod_int <- grad %>%
+select_if(is.numeric) %>% select(-1, -gre_quant, -gre_verbal)
+predictors_int <- colnames(grad_mod_int) 
+grad_mod_int <- (grad_mod_int %>%
+mutate(logit = log(p_int/(1-p_int))) %>%
+gather(key = "predictors_int", value = "value", -logit))
+# check linearity between x and logit of the outcome
+ggplot(grad_mod_int, aes(logit, value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors_int, scales = "free_y") +
+  labs(titles = "Linearity of Numerical Variables",
+       caption = "Figure 9. plots the linearity between the logit of outcome and the value of numerical varibales")
+# check influencial values
+```
+
+Second, logistic regression also assumes the linearity of independent variables.As shown in "The linearity of independent variables", the logit of GRE is quite linear to the accepted probability in logit scale. Even though there exists an U-shaped trend at the end of the parabala, the majority of gpa points associated linearly to the logit outcome of undergraduate gpa. However, the scatter plots of gre_writing shows non_linearity, similar to a cubic term.
+
+```{r,echo=FALSE}
+# top3 largest values
+plot(full_mod_int, which = 4, id.n = 3,
+     sub = "Figure 10 describes the cook's distance for all observations in the dataset")
+# plot the standardized residual
+data_int <- augment(full_mod_int) %>% mutate(index = 1:n())
+#data_int %>% top_n(3, .cooksd)
+ggplot(data_int, aes(index, .std.resid)) + 
+  geom_point(aes(color = decision1)) +
+  theme_bw() +
+  labs(titles = "Standardized Residuals",
+       x = "index",
+       y= "Standard Deviation",
+       caption = "Figure 11. plots the distance between predicted value and residuals")
+# if standardized residual is greater than 3 -> Influential
+#data_int %>% filter(abs(.std.resid) > 3)
+#Correlation matrix
+grad_noNA = grad %>% filter(is.na(ugrad_gpa) == FALSE, is.na(gre_verbal) ==FALSE,  is.na(gre_quant) ==FALSE, is.na(gre_writing) ==FALSE)
+grad_noNA = grad_noNA %>% mutate(gre_total = gre_verbal + gre_quant)
+my_data1 <- grad_noNA[, c(8,11,14)]
+my_data2 <- grad_noNA[, c(8,9,10,11)]
+```
+
+Third, some outliers may be influential enough to alter the quality of the logistic regression model. Therefore, we calculated the Cook's distance for each points; the higher the leverage and residuals of that point, the higher its Cook's distance. As demonstrated in Cook's distance graph, there exist couple of spikes in the graph. To further investigate this issue, the deviance residuals plots has ben constructed. Since it does not have any observations whose cook's value is large than 3, we conclude that the dataset does not have any influential outliers. 
+
+```{r,echo=FALSE}
+(rcorr(as.matrix(my_data1)))
+#This is the correlation matrix for ugrad_gpa, gre_verbal, gre_quant, gre_writing
+(rcorr(as.matrix(my_data2)))
+```
+
+Last but not least, since the variables are intercorrlated, we take this into consideration and use interaction terms to overcome this issue.
+
+#Tests for Significant Interaction
+Next, we test if the two models are significantly different to assess the significance of the interaction term. As you can see in Figure 12, the plot suggests that the effect of GRE writing is not consistent across all three groups of students.  For example, a writing score of 5 showed the greater mean probability of acceptance for American and international students with US Degree. for international student, a writing score of 3 gives the highest chance of acceptance. This suggests there may be a meaningful or significant interaction effect, but we will need to do a statistical test to confirm this hypothesis. 
+
+\newpage
+
+```{r,echo=FALSE}
+gg_int <- grad %>%
+ mutate(pred = predict(gradmodel_int,
+ type = "response")) #%>% select(decision, pred)
+gg <- grad %>%
+ mutate(pred = predict(gradmodel,
+ type = "response")) #%>% select(decision, pred)
+wr = gg_int %>% mutate(gre_writing = as.integer(gre_writing))
+interaction.plot(x.factor     = wr$status,
+                 trace.factor = wr$gre_writing, 
+                 response     = wr$pred, 
+                 main = "Interaction Plot for GRE Writing and Student Status",
+                 sub = "Figure 12.  Interaction Plot Base on information of top 10 Computer Science programs",
+                 xlab="Student status",
+                 ylab="Predicition of acceptance rate",
+                 trace.label = "Writing Score",
+                 fun = mean,
+                 type="b",
+                 col=c("black","red","green","blue","orange"),  ### Colors for levels of trace var.
+                 pch=c(19),                     ### Symbols for levels of trace var.
+                 fixed=TRUE,                    ### Order by factor order in data
+                 leg.bty = "o") 
+```
+
+We use an ANOVA Chi-Square Test to test for the significant of interaction. As can be seen from the p-value of 0.0009017, the interaction is significant, which supports the result of the stepwise regression.
+
+```{r,echo=FALSE}
+
+(anova( full_mod, full_mod_int, test = "Chisq"))
+(anova(full_mod_int))
+```
+
+#Model Performance
+Next, we plot box plots of admission decisions vs predicted probabilities to assess the predictive power of our models.
+
+```{r,echo=FALSE}
+p1 <- grad %>%
+ mutate(pred = predict(gradmodel_int,
+ type = "response")) %>%
+ ggplot(aes(factor(decision1), pred)) +
+ geom_boxplot() +
+ geom_point(aes(color = status),
+ position = "jitter") +
+ labs(title = "Model With Interaction",
+      x = "Admission Decision",
+      y="Predicted Probability of Admission") +
+      scale_x_discrete(labels = c('Rejected','Accepted'))+
+ theme(legend.position="bottom")
+p2 <- grad %>%
+ mutate(pred = predict(gradmodel,
+ type = "response")) %>%
+ ggplot(aes(factor(decision1), pred)) +
+ geom_boxplot() +
+ geom_point(aes(color = status),
+ position = "jitter") +
+ labs(title = "Model Without Interaction",
+      x= "Admission Decision",
+      y="Predicted Probability of Admission") +
+      scale_x_discrete(labels = c('Rejected','Accepted')) +
+  theme(legend.position="bottom", legend.title = element_blank())
+grid.arrange(p1, p2, ncol = 2, bottom = "Figure 13. The boxplots of our models' outcome")
+```
+
+In model without interaction, the mean of predicted probabilities of rejected students is around 0.41, while the mean of predicted probabilities of accepted students is around 0.43, which is slightly higher than the mean of predicted probabilities of rejected students. Since their interval are overlapped, it means that the prediction may not be significant enough to explain the success of a student being accepted. In addition, the plots are fairly scattered, meaning that there does not exist a certain pattern to explain the trend.
+
+In model with interaction, the mean of predicted probabilities of rejected students is around 0.4, while the mean of predicted probabilities of accepted students is around 0.45, which is slightly higher than the mean of predicted probabilities of rejected students. Since their interval are overlapped, it means that the prediction may not be significant enough to explain the success of a student being accepted. However, the plots are more densely concentrated than the one without interation.
+
+\newpage
+
+#Test for the Inclusion of a Categorical Variable
+**H~0~:** full_mod = full_mod
+
+**H~a~:** full_mod = full_mod_int
+
+Significance Level: 0.05
+Pr(>Chi) for two models is 0.1581, which is bigger than siginificant level 0.05. Therefore, two models are not significantly different.
+Pr(>Chi) for ugrad_gpa, GRE_Total, gre_writing and status are all smaller than siginificant level 0.05, while all the interaction effect is not signficant. Therefore, the anova table indicates that the main effect are significant, and interaction effect is not significant.
+Our interpretation of this result is that, since our research focus on the top 10 Computer Science programs, most of the applicants have strong academic backgrounds, regardless of student status. For example, the acceptance rate for Carnegie Mellon University CS Program is ~6.5%. The distribution of applicants' grade are extremly left skewed. That means it is harder to differentiate international students and American students just by looking at their standard grades.
+
+#Discussion
+From this exploratory data analysis, we confirm many of the hypotheses that we had going into this project. The number of students applied for advanced degrees has increased over the years. We confirmed relationships between variables such as GPA and GRE scores. We learned several things as well. For example, we learned the distribution of GPA and GRE quant score are left skewed, and GRE verbal and writing scores have a bell like distribution, with several "spikes" among certain scores. We were surprised to see that American students tended to have higher rates of acceptance than international students.
+
+While this is a very interesting and robust dataset to analyze, there are also several problems we encountered. First, the dataset is not very clean, as it is self-reported. For example, the names of Universities and Majors are not always consistent. For example, some students may write "Boston University (BU)" while others write the name of the specific college at BU such as "Boston University - Metropolitan College." We also noticed that scales of scores and GPA are not always consistent. For example, GPA is most often reported on a 4.0 scale, however, some responses included other scales such as 10 point scale. These will all be problems that we have to work around when going into modeling.
+
+From the analysis above, we see that while GPA, GRE Scores, and Student Status have a significant affect on admissions decisions, they alone are not great predictors for admission results. We see from the box plots that while the model had a higher average predicted probability for students that were actually accepted, there is too much variance in the resulted predictions. This result is likely due to the fact that the dataset is missing many variables that may also be important for admission decisions, such as research experience, reccomendations, reputation of undergraduate institution and so on. While it may be possible to extract this information from the 'comments', many observations did not include any comments and many more did not mention these factors in the comments. This leads us to believe that the admissions process is more than just a "numbers game," and likely includes many "intangibles" in order to determine the ultimate admission result of each student.
